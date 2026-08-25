@@ -7,16 +7,19 @@ test.describe("Navegação", () => {
     await page.goto("/");
 
     const nav = page.locator(".site-nav");
-    await nav.getByRole("link", { name: "Benefícios" }).click();
-    await expect(page.locator("#beneficios")).toBeInViewport();
+    await nav.getByRole("link", { name: "Como Funciona" }).click();
+    await expect(page.locator("#como-funciona")).toBeInViewport();
 
     await nav.getByRole("link", { name: "Simulador" }).click();
     await expect(page.locator("#simulador")).toBeInViewport();
 
-    await nav.getByRole("link", { name: "FAQ" }).click();
-    await expect(page.locator("#faq")).toBeInViewport();
+    await nav.getByRole("link", { name: "Benefícios" }).click();
+    await expect(page.locator("#beneficios")).toBeInViewport();
 
     await nav.getByRole("link", { name: "Contato" }).click();
     await expect(page.locator("#captura")).toBeInViewport();
+
+    await nav.getByRole("link", { name: "FAQ" }).click();
+    await expect(page.locator("#faq")).toBeInViewport();
   });
 });
