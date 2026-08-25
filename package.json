@@ -1,0 +1,13 @@
+{
+  "name": "dc-eletrica-site",
+  "version": "1.0.0",
+  "description": "Site institucional da DC Elétrica — projetos de energia solar e elétricos industriais",
+  "private": true,
+  "scripts": {
+    "start": "node server.js",
+    "test:e2e": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.45.0"
+  }
+}
