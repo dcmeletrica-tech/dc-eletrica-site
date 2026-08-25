@@ -4,8 +4,7 @@ const { test, expect } = require("@playwright/test");
 
 const IMAGES = [
   { selector: ".brand-logo", alt: "DC Elétrica", file: "logo-horizontal.jpeg" },
-  { selector: ".hero-logo", alt: /Símbolo DC Elétrica/, file: "logo-principal.jpeg" },
-  { selector: ".sobre-logo", alt: "Logo monocromático DC Elétrica", file: "logo-monocromatico.jpeg" },
+  { selector: ".lead-hero-logo", alt: "Símbolo DC Elétrica", file: "logo-principal.jpeg" },
   { selector: ".footer-logo", alt: "", file: "logo-simbolo.jpeg" },
 ];
 

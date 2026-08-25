@@ -6,7 +6,7 @@ const WHATSAPP_NUMBER = "5519998093790";
 
 test.describe("Lead page", () => {
   test("carrega com título, simulador e benefícios", async ({ page }) => {
-    await page.goto("/lead.html");
+    await page.goto("/");
 
     await expect(page).toHaveTitle(/economia de energia solar/);
     await expect(page.locator("h1")).toContainText("economizar");
@@ -18,7 +18,7 @@ test.describe("Lead page", () => {
   });
 
   test("exibe as seções de conteúdo", async ({ page }) => {
-    await page.goto("/lead.html");
+    await page.goto("/");
 
     await expect(page.locator(".stats-grid .stat")).toHaveCount(4);
     await expect(page.locator("#como-funciona h2")).toHaveText("Como funciona");
@@ -35,7 +35,7 @@ test.describe("Lead page", () => {
   });
 
   test("FAQ abre e mostra a resposta", async ({ page }) => {
-    await page.goto("/lead.html");
+    await page.goto("/");
 
     const first = page.locator(".faq-item").first();
     await first.locator("summary").click();
@@ -43,7 +43,7 @@ test.describe("Lead page", () => {
   });
 
   test("envia lead e abre o WhatsApp com a mensagem preenchida", async ({ page }) => {
-    await page.goto("/lead.html");
+    await page.goto("/");
 
     await page.locator("#lead-name").fill("Maria Silva");
     await page.locator("#lead-phone").fill("(19) 99999-0000");
@@ -66,7 +66,7 @@ test.describe("Lead page", () => {
   });
 
   test("mostra erro ao enviar formulário vazio", async ({ page }) => {
-    await page.goto("/lead.html");
+    await page.goto("/");
 
     await page.getByRole("button", { name: "Enviar pelo WhatsApp" }).click();
 
@@ -75,7 +75,7 @@ test.describe("Lead page", () => {
   });
 
   test("rejeita WhatsApp inválido", async ({ page }) => {
-    await page.goto("/lead.html");
+    await page.goto("/");
 
     await page.locator("#lead-name").fill("João");
     await page.locator("#lead-phone").fill("123");
@@ -94,11 +94,5 @@ test.describe("Botão flutuante de WhatsApp", () => {
     const float = page.locator(".whatsapp-float");
     await expect(float).toBeVisible();
     await expect(float).toHaveAttribute("href", new RegExp("wa\\.me/" + WHATSAPP_NUMBER));
-  });
-
-  test("está presente na lead page", async ({ page }) => {
-    await page.goto("/lead.html");
-
-    await expect(page.locator(".whatsapp-float")).toBeVisible();
   });
 });
