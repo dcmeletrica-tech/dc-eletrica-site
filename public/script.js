@@ -6,6 +6,24 @@
     yearEl.textContent = String(new Date().getFullYear());
   }
 
+  var navToggle = document.getElementById("nav-toggle");
+  var siteNav = document.getElementById("site-nav");
+  if (navToggle && siteNav) {
+    navToggle.addEventListener("click", function () {
+      var open = siteNav.classList.toggle("open");
+      navToggle.setAttribute("aria-expanded", String(open));
+      navToggle.setAttribute("aria-label", open ? "Fechar menu" : "Abrir menu");
+    });
+
+    siteNav.querySelectorAll("a").forEach(function (link) {
+      link.addEventListener("click", function () {
+        siteNav.classList.remove("open");
+        navToggle.setAttribute("aria-expanded", "false");
+        navToggle.setAttribute("aria-label", "Abrir menu");
+      });
+    });
+  }
+
   var form = document.getElementById("contact-form");
   if (!form) {
     return;
