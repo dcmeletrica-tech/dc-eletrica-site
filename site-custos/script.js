@@ -75,22 +75,34 @@
     return dd + "/" + mm + "/" + d.getFullYear();
   }
 
-  function parseGviz(text) {
-    var start = text.indexOf("{");
-    var end = text.lastIndexOf("}");
-    if (start === -1 || end === -1) return null;
-    return JSON.parse(text.slice(start, end + 1));
-  }
-
+  // Carrega a aba via JSONP (script tag), que funciona de qualquer origem
+  // (inclusive abrindo o arquivo localmente via file://), sem depender de CORS.
   function fetchSheet(gid) {
-    var url = "https://docs.google.com/spreadsheets/d/" + SHEET_ID +
-      "/gviz/tq?gid=" + gid + "&tqx=out:json";
-    return fetch(url)
-      .then(function (r) {
-        if (!r.ok) throw new Error("HTTP " + r.status);
-        return r.text();
-      })
-      .then(parseGviz);
+    return new Promise(function (resolve, reject) {
+      var cbName = "gviz_cb_" + gid + "_" + Date.now();
+      var url = "https://docs.google.com/spreadsheets/d/" + SHEET_ID +
+        "/gviz/tq?gid=" + gid + "&tqx=out:json;responseHandler:" + cbName;
+      var script = document.createElement("script");
+      var timer = setTimeout(function () {
+        cleanup();
+        reject(new Error("timeout"));
+      }, 15000);
+      function cleanup() {
+        clearTimeout(timer);
+        delete window[cbName];
+        if (script.parentNode) script.parentNode.removeChild(script);
+      }
+      window[cbName] = function (data) {
+        cleanup();
+        resolve(data);
+      };
+      script.onerror = function () {
+        cleanup();
+        reject(new Error("script error"));
+      };
+      script.src = url;
+      document.head.appendChild(script);
+    });
   }
 
   function rowsToObjects(table) {
