@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Controle de Pagamentos — Viagem</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="bg-decor" aria-hidden="true"></div>
+
+  <header class="hero">
+    <div class="container">
+      <div class="hero-badge">
+        <span class="dot"></span>
+        Controle de Pagamentos
+      </div>
+      <h1>Pagamentos do cruzeiro</h1>
+      <p class="hero-sub">Acompanhe as parcelas, veja o que já foi pago e quanto ainda falta para quitar o cruzeiro.</p>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- Resumo -->
+    <section class="summary" aria-label="Resumo da dívida">
+      <div class="card summary-card">
+        <span class="summary-label">Valor Total da Dívida</span>
+        <span class="summary-value" id="sum-total">R$ 0,00</span>
+      </div>
+      <div class="card summary-card">
+        <span class="summary-label">Número de Parcelas</span>
+        <span class="summary-value" id="sum-parcelas">12</span>
+      </div>
+      <div class="card summary-card">
+        <span class="summary-label">Parcela Base (÷12)</span>
+        <span class="summary-value" id="sum-base">R$ 0,00</span>
+      </div>
+      <div class="card summary-card">
+        <span class="summary-label">Parcela Sugerida</span>
+        <span class="summary-value" id="sum-sugerida">R$ 0,00</span>
+      </div>
+      <div class="card summary-card accent">
+        <span class="summary-label">Total Já Pago</span>
+        <span class="summary-value" id="sum-pago">R$ 0,00</span>
+      </div>
+      <div class="card summary-card danger">
+        <span class="summary-label">Saldo Devedor Atual</span>
+        <span class="summary-value" id="sum-devedor">R$ 0,00</span>
+      </div>
+    </section>
+
+    <!-- Tabela de parcelas -->
+    <section class="card table-card">
+      <div class="table-header">
+        <h2>Parcelas</h2>
+        <p class="table-hint">Edite a coluna <strong>Valor Pago</strong> para recalcular tudo automaticamente. A <strong>Parcela Sugerida</strong> aparece no resumo conforme o mês que você está editando.</p>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Parcela</th>
+              <th>Mês/Ano</th>
+              <th class="col-pago">Valor Pago (R$)</th>
+              <th>Saldo Anterior (R$)</th>
+              <th>Saldo Restante (R$)</th>
+            </tr>
+          </thead>
+          <tbody id="parcelas-body"></tbody>
+          <tfoot>
+            <tr>
+              <td colspan="2">TOTAL</td>
+              <td id="foot-pago">R$ 0,00</td>
+              <td></td>
+              <td id="foot-restante">R$ 0,00</td>
+              <td></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </section>
+
+    <!-- Como usar -->
+    <section class="card howto">
+      <h2>Como usar</h2>
+      <ol>
+        <li>Preencha a coluna <strong>Valor Pago</strong> com o que você pagou em cada mês.</li>
+        <li>Pagar <strong>mais</strong> reduz as parcelas seguintes.</li>
+        <li>Pagar <strong>menos</strong> divide o saldo restante.</li>
+        <li>A <strong>Parcela Sugerida</strong> no resumo mostra quanto pagar no mês que você está editando.</li>
+      </ol>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <p>Controle de Pagamentos do Cruzeiro · Dados salvos automaticamente no seu navegador.</p>
+    </div>
+  </footer>
+
+  <script src="config.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

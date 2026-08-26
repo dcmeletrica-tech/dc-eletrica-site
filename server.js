@@ -5,7 +5,20 @@ const fs = require("fs");
 const path = require("path");
 
 const PORT = process.env.PORT || 3000;
-const PUBLIC_DIR = path.join(__dirname, "public");
+
+// Roteamento dos dois sites
+const SITES = {
+  "/": { dir: "site-eletrica" },
+  "/cruzeiro": { dir: "site-cruzeiro" },
+};
+
+function resolveSite(urlPath) {
+  if (urlPath === "/cruzeiro" || urlPath.startsWith("/cruzeiro/")) {
+    const rel = urlPath.slice("/cruzeiro".length) || "/";
+    return { dir: path.join(__dirname, "site-cruzeiro"), rel };
+  }
+  return { dir: path.join(__dirname, "site-eletrica"), rel: urlPath };
+}
 
 const MIME = {
   ".html": "text/html; charset=utf-8",
@@ -20,9 +33,10 @@ const MIME = {
 
 const server = http.createServer((req, res) => {
   const urlPath = decodeURIComponent(new URL(req.url, "http://localhost").pathname);
-  let filePath = path.join(PUBLIC_DIR, urlPath === "/" ? "index.html" : urlPath);
+  const { dir, rel } = resolveSite(urlPath);
+  let filePath = path.join(dir, rel === "/" ? "index.html" : rel);
 
-  if (!filePath.startsWith(PUBLIC_DIR)) {
+  if (!filePath.startsWith(dir)) {
     res.writeHead(403);
     res.end("Forbidden");
     return;
