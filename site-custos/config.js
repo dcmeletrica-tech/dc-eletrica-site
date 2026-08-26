@@ -3,4 +3,4 @@
 //  Depois de publicar o script como Web App, copie a URL
 //  (termina em /exec) e cole entre as aspas abaixo.
 // ============================================================
-var WEB_APP_URL = "COLE_A_URL_DO_APPS_SCRIPT_AQUI";
+var WEB_APP_URL = "https://script.google.com/macros/s/AKfycbz6d3NSNNQURGznyzK4arfyXmkqYEmh0jqGaKoMuYFIFpwyJ7I-OIFuLHaxCSMT4hy-fw/exec";
