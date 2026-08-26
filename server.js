@@ -6,16 +6,21 @@ const path = require("path");
 
 const PORT = process.env.PORT || 3000;
 
-// Roteamento dos dois sites
+// Roteamento dos sites
 const SITES = {
   "/": { dir: "site-eletrica" },
   "/cruzeiro": { dir: "site-cruzeiro" },
+  "/busca-empresas": { dir: "site-busca-empresas" },
 };
 
 function resolveSite(urlPath) {
   if (urlPath === "/cruzeiro" || urlPath.startsWith("/cruzeiro/")) {
     const rel = urlPath.slice("/cruzeiro".length) || "/";
     return { dir: path.join(__dirname, "site-cruzeiro"), rel };
+  }
+  if (urlPath === "/busca-empresas" || urlPath.startsWith("/busca-empresas/")) {
+    const rel = urlPath.slice("/busca-empresas".length) || "/";
+    return { dir: path.join(__dirname, "site-busca-empresas"), rel };
   }
   return { dir: path.join(__dirname, "site-eletrica"), rel: urlPath };
 }

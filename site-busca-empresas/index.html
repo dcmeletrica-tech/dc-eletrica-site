@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Localizador de Empresas Próximas (Arquivo Único)</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; background: #f0f4f8; color: #1f2937; min-height: 100vh; }
+    .topbar { background: linear-gradient(135deg, #1e3a8a, #2563eb); color: #fff; padding: 28px 20px; text-align: center; }
+    .topbar h1 { font-size: 1.6rem; font-weight: 700; }
+    .subtitle { margin-top: 6px; opacity: 0.9; font-size: 0.95rem; }
+    .container { max-width: 1100px; margin: 24px auto; padding: 0 16px; }
+    .card { background: #fff; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.08); padding: 20px; margin-bottom: 20px; }
+    .form-card form { display: grid; grid-template-columns: 1fr 1.4fr 1fr auto; gap: 14px; align-items: end; }
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    .field label { font-size: 0.85rem; font-weight: 600; color: #374151; }
+    .field input { padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 0.95rem; width: 100%; }
+    .field input:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.15); }
+    .btn { padding: 10px 18px; border: none; border-radius: 8px; font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: background 0.2s, transform 0.1s; }
+    .btn:active { transform: scale(0.98); }
+    .btn-primary { background: #2563eb; color: #fff; white-space: nowrap; }
+    .btn-primary:hover { background: #1d4ed8; }
+    .btn-primary:disabled { background: #93c5fd; cursor: not-allowed; }
+    .btn-export { background: #10b981; color: #fff; font-size: 0.85rem; padding: 8px 14px; }
+    .btn-export:hover { background: #059669; }
+    .status { margin-top: 16px; padding: 12px 14px; border-radius: 8px; font-size: 0.9rem; }
+    .status.info { background: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe; }
+    .status.error { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
+    .status.success { background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; }
+    .results-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 14px; }
+    .results-header h2 { font-size: 1.2rem; }
+    .results-meta { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .badge { background: #2563eb; color: #fff; padding: 4px 12px; border-radius: 999px; font-size: 0.85rem; font-weight: 600; }
+    .export-buttons { display: flex; gap: 8px; }
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+    thead th { background: #f3f4f6; text-align: left; padding: 10px 12px; font-weight: 600; color: #374151; border-bottom: 2px solid #e5e7eb; white-space: nowrap; }
+    tbody td { padding: 10px 12px; border-bottom: 1px solid #eef2f7; vertical-align: top; }
+    tbody tr:hover { background: #f9fafb; }
+    td a { color: #2563eb; text-decoration: none; }
+    td a:hover { text-decoration: underline; }
+    .wa-link { color: #059669; font-weight: 600; }
+    .empty-row td { text-align: center; color: #6b7280; padding: 24px; }
+    .hint { margin-top: 12px; font-size: 0.8rem; color: #6b7280; }
+    @media (max-width: 720px) { .form-card form { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <h1>Localizador de Empresas Próximas</h1>
+    <p class="subtitle">Arquivo único — use no celular</p>
+  </header>
+
+  <main class="container">
+    <section class="card form-card">
+      <form id="searchForm">
+        <div class="field">
+          <label for="cep">CEP</label>
+          <input type="text" id="cep" name="cep" placeholder="Ex.: 01310-100" maxlength="9" required />
+        </div>
+        <div class="field">
+          <label for="tipo">Tipo de empresa</label>
+          <input type="text" id="tipo" name="tipo" list="tiposSugeridos" placeholder="Ex.: academia, restaurante, clínica, loja" required />
+          <datalist id="tiposSugeridos">
+            <option value="academia"></option>
+            <option value="restaurante"></option>
+            <option value="clínica"></option>
+            <option value="loja"></option>
+            <option value="barbearia"></option>
+            <option value="salão de beleza"></option>
+            <option value="padaria"></option>
+            <option value="oficina mecânica"></option>
+            <option value="escritório de advocacia"></option>
+            <option value="consultório odontológico"></option>
+            <option value="mercado"></option>
+            <option value="farmácia"></option>
+          </datalist>
+        </div>
+        <div class="field">
+          <label for="raio">Raio de busca (km)</label>
+          <input type="number" id="raio" name="raio" min="0.1" max="50" step="0.1" value="5" required />
+        </div>
+        <div class="field field-actions">
+          <button type="submit" id="btnBuscar" class="btn btn-primary">Buscar empresas</button>
+        </div>
+      </form>
+      <div id="status" class="status" hidden></div>
+    </section>
+
+    <section class="card results-card" id="resultsCard" hidden>
+      <div class="results-header">
+        <h2>Resultados</h2>
+        <div class="results-meta">
+          <span id="resultCount" class="badge"></span>
+          <div class="export-buttons">
+            <button id="btnCsv" class="btn btn-export">Exportar CSV</button>
+            <button id="btnExcel" class="btn btn-export">Exportar Excel</button>
+          </div>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table id="resultsTable">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Nome</th>
+              <th>Endereço</th>
+              <th>Telefone / WhatsApp</th>
+              <th>E-mail</th>
+              <th>Site</th>
+            </tr>
+          </thead>
+          <tbody id="resultsBody"></tbody>
+        </table>
+      </div>
+      <p class="hint">Dica: o Google Places geralmente não fornece e-mail. Preencha manualmente ou use o site/telefone para contato.</p>
+    </section>
+  </main>
+
+  <script>
+    (function () {
+      "use strict";
+
+      var geocoder = null;
+      var placesService = null;
+      var results = [];
+      var googleReady = false;
+
+      var form = document.getElementById("searchForm");
+      var btnBuscar = document.getElementById("btnBuscar");
+      var statusEl = document.getElementById("status");
+      var resultsCard = document.getElementById("resultsCard");
+      var resultsBody = document.getElementById("resultsBody");
+      var resultCount = document.getElementById("resultCount");
+      var btnCsv = document.getElementById("btnCsv");
+      var btnExcel = document.getElementById("btnExcel");
+
+      var TIPO_MAP = {
+        academia: "gym",
+        restaurante: "restaurant",
+        "clínica": "health",
+        clinica: "health",
+        loja: "store",
+        barbearia: "barber",
+        "salão de beleza": "beauty_salon",
+        "salao de beleza": "beauty_salon",
+        padaria: "bakery",
+        "oficina mecânica": "car_repair",
+        "oficina mecanica": "car_repair",
+        "escritório de advocacia": "lawyer",
+        "escritorio de advocacia": "lawyer",
+        "consultório odontológico": "dentist",
+        "consultorio odontologico": "dentist",
+        mercado: "supermarket",
+        farmácia: "pharmacy",
+        farmacia: "pharmacy",
+        hotel: "lodging",
+        hospital: "hospital",
+        escola: "school",
+        igreja: "church",
+        banco: "bank",
+        "posto de gasolina": "gas_station",
+        "posto de combustível": "gas_station",
+        "posto de combustivel": "gas_station"
+      };
+
+      function log(msg) {
+        if (window.console && window.console.log) {
+          console.log("[Localizador] " + msg);
+        }
+      }
+
+      function initMap() {
+        log("initMap chamado");
+        try {
+          geocoder = new google.maps.Geocoder();
+          placesService = new google.maps.places.PlacesService(
+            document.createElement("div")
+          );
+          googleReady = true;
+          btnBuscar.textContent = "Buscar empresas";
+          btnBuscar.disabled = false;
+          log("Google Maps pronto");
+        } catch (err) {
+          googleReady = false;
+          showStatus("Erro ao iniciar Google Maps: " + err.message, "error");
+          log("Erro initMap: " + err.message);
+        }
+      }
+      window.initMap = initMap;
+
+      function waitForGoogle(timeoutMs) {
+        return new Promise(function (resolve, reject) {
+          var start = Date.now();
+          function check() {
+            if (googleReady && google && google.maps && geocoder && placesService) {
+              resolve();
+              return;
+            }
+            if (Date.now() - start > timeoutMs) {
+              reject(new Error("Google Maps não carregou. Verifique a chave da API e as restrições."));
+              return;
+            }
+            setTimeout(check, 200);
+          }
+          check();
+        });
+      }
+
+      function showStatus(msg, type) {
+        statusEl.hidden = false;
+        statusEl.className = "status " + (type || "info");
+        statusEl.textContent = msg;
+      }
+
+      function hideStatus() {
+        statusEl.hidden = true;
+      }
+
+      function setLoading(loading) {
+        btnBuscar.disabled = loading;
+        btnBuscar.textContent = loading ? "Buscando..." : "Buscar empresas";
+      }
+
+      function normalizeCep(cep) {
+        return cep.replace(/\D/g, "");
+      }
+
+      function withTimeout(promise, ms, label) {
+        return new Promise(function (resolve, reject) {
+          var timer = setTimeout(function () {
+            reject(new Error(label + " demorou demais. Tente novamente."));
+          }, ms);
+          promise.then(function (v) {
+            clearTimeout(timer);
+            resolve(v);
+          }).catch(function (err) {
+            clearTimeout(timer);
+            reject(err);
+          });
+        });
+      }
+
+      function geocodeCep(cep) {
+        return new Promise(function (resolve, reject) {
+          log("Iniciando geocode para " + cep);
+          geocoder.geocode(
+            { address: cep + ", Brasil", region: "br" },
+            function (res, status) {
+              log("Geocode retornou: " + status);
+              if (status === "OK" && res && res.length) {
+                resolve(res[0].geometry.location);
+              } else {
+                var msg = "Geocode falhou: " + status;
+                if (status === "REQUEST_DENIED") {
+                  msg += " — a chave da API foi recusada. Verifique a restrição de site no Google Cloud Console (referrer deve incluir https://dcmeletrica-tech.github.io/*).";
+                } else if (status === "OVER_QUERY_LIMIT") {
+                  msg += " — cota da API excedida.";
+                } else if (status === "INVALID_REQUEST") {
+                  msg += " — requisição inválida.";
+                } else if (status === "ZERO_RESULTS") {
+                  msg = "CEP não encontrado. Verifique o CEP informado.";
+                } else {
+                  msg += ". Verifique o CEP e as permissões da chave.";
+                }
+                reject(new Error(msg));
+              }
+            }
+          );
+        });
+      }
+
+      function nearbySearch(location, radiusMeters, tipo) {
+        return new Promise(function (resolve, reject) {
+          log("Iniciando nearbySearch");
+          var request = {
+            location: location,
+            radius: radiusMeters,
+            keyword: tipo
+          };
+          var mapped = TIPO_MAP[tipo.toLowerCase().trim()];
+          if (mapped) {
+            request.type = mapped;
+          }
+          placesService.nearbySearch(request, function (res, status) {
+            log("nearbySearch retornou: " + status + " (itens: " + (res ? res.length : 0) + ")");
+            if (status === "OK" && res) {
+              resolve(res);
+            } else if (status === "ZERO_RESULTS") {
+              resolve([]);
+            } else {
+              reject(new Error("NearbySearch falhou: " + status + ". Verifique a chave e as APIs habilitadas."));
+            }
+          });
+        });
+      }
+
+      function getDetails(place) {
+        return new Promise(function (resolve) {
+          placesService.getDetails(
+            { placeId: place.place_id, fields: ["name", "formatted_address", "formatted_phone_number", "website", "international_phone_number"] },
+            function (detail, status) {
+              if (status === "OK" && detail) {
+                resolve(detail);
+              } else {
+                log("Detalhes ignorados para " + place.name + ": " + status);
+                resolve(place);
+              }
+            }
+          );
+        });
+      }
+
+      function phoneToWhatsApp(phone) {
+        if (!phone) return null;
+        var digits = phone.replace(/\D/g, "");
+        if (digits.length < 10) return null;
+        if (digits.length === 10 || digits.length === 11) {
+          digits = "55" + digits;
+        }
+        return "https://wa.me/" + digits;
+      }
+
+      function renderResults() {
+        resultsBody.innerHTML = "";
+        if (!results.length) {
+          resultsBody.innerHTML =
+            '<tr class="empty-row"><td colspan="6">Nenhuma empresa encontrada no raio informado.</td></tr>';
+          resultCount.textContent = "0 resultados";
+          return;
+        }
+
+        results.forEach(function (r, i) {
+          var tr = document.createElement("tr");
+
+          var tdNum = document.createElement("td");
+          tdNum.textContent = i + 1;
+
+          var tdName = document.createElement("td");
+          tdName.textContent = r.name;
+
+          var tdAddr = document.createElement("td");
+          tdAddr.textContent = r.address || "-";
+
+          var tdPhone = document.createElement("td");
+          if (r.phone) {
+            var wa = phoneToWhatsApp(r.phone);
+            if (wa) {
+              var a = document.createElement("a");
+              a.href = wa;
+              a.target = "_blank";
+              a.rel = "noopener";
+              a.className = "wa-link";
+              a.textContent = r.phone + " (WhatsApp)";
+              tdPhone.appendChild(a);
+            } else {
+              tdPhone.textContent = r.phone;
+            }
+          } else {
+            tdPhone.textContent = "-";
+          }
+
+          var tdEmail = document.createElement("td");
+          tdEmail.textContent = r.email || "-";
+
+          var tdSite = document.createElement("td");
+          if (r.website) {
+            var sa = document.createElement("a");
+            sa.href = r.website;
+            sa.target = "_blank";
+            sa.rel = "noopener";
+            sa.textContent = "Visitar";
+            tdSite.appendChild(sa);
+          } else {
+            tdSite.textContent = "-";
+          }
+
+          tr.appendChild(tdNum);
+          tr.appendChild(tdName);
+          tr.appendChild(tdAddr);
+          tr.appendChild(tdPhone);
+          tr.appendChild(tdEmail);
+          tr.appendChild(tdSite);
+          resultsBody.appendChild(tr);
+        });
+
+        resultCount.textContent = results.length + " resultado(s)";
+      }
+
+      function buildRows() {
+        return results.map(function (r, i) {
+          return {
+            "#": i + 1,
+            "Nome": r.name,
+            "Endereço": r.address || "",
+            "Telefone": r.phone || "",
+            "WhatsApp": phoneToWhatsApp(r.phone) || "",
+            "E-mail": r.email || "",
+            "Site": r.website || ""
+          };
+        });
+      }
+
+      function exportCsv() {
+        if (!results.length) return;
+        var rows = buildRows();
+        var headers = Object.keys(rows[0]);
+        var csv = headers.join(";") + "\r\n";
+        rows.forEach(function (row) {
+          csv += headers.map(function (h) {
+            var v = row[h] == null ? "" : String(row[h]);
+            return '"' + v.replace(/"/g, '""') + '"';
+          }).join(";") + "\r\n";
+        });
+        downloadFile("leads.csv", "\uFEFF" + csv, "text/csv;charset=utf-8;");
+      }
+
+      function exportExcel() {
+        if (!results.length) return;
+        loadSheetJS(function () {
+          var rows = buildRows();
+          var ws = XLSX.utils.json_to_sheet(rows);
+          var wb = XLSX.utils.book_new();
+          XLSX.utils.book_append_sheet(wb, ws, "Leads");
+          XLSX.writeFile(wb, "leads.xlsx");
+        });
+      }
+
+      function loadSheetJS(cb) {
+        if (window.XLSX) {
+          cb();
+          return;
+        }
+        var s = document.createElement("script");
+        s.src = "https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js";
+        s.onload = cb;
+        s.onerror = function () {
+          showStatus("Não foi possível carregar a biblioteca do Excel. Use a exportação CSV.", "error");
+        };
+        document.head.appendChild(s);
+      }
+
+      function downloadFile(filename, content, mime) {
+        var blob = new Blob([content], { type: mime });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }
+
+      btnBuscar.disabled = true;
+      btnBuscar.textContent = "Carregando Google Maps...";
+
+      form.addEventListener("submit", function (e) {
+        e.preventDefault();
+        var cep = normalizeCep(document.getElementById("cep").value);
+        var tipo = document.getElementById("tipo").value.trim();
+        var raioKm = parseFloat(document.getElementById("raio").value);
+
+        if (!cep || cep.length !== 8) {
+          showStatus("Informe um CEP válido (8 dígitos).", "error");
+          return;
+        }
+        if (!tipo) {
+          showStatus("Informe o tipo de empresa.", "error");
+          return;
+        }
+        if (!raioKm || raioKm <= 0) {
+          showStatus("Informe um raio válido.", "error");
+          return;
+        }
+
+        setLoading(true);
+        hideStatus();
+        results = [];
+        resultsCard.hidden = true;
+
+        log("Iniciando busca: " + cep + ", " + tipo + ", " + raioKm + "km");
+
+          withTimeout(waitForGoogle(10000), 12000, "Carregamento do Google Maps")
+          .then(function () {
+            return withTimeout(geocodeCep(cep), 10000, "Geocode");
+          })
+          .then(function (location) {
+            showStatus("Buscando empresas em um raio de " + raioKm + " km...", "info");
+            return withTimeout(nearbySearch(location, raioKm * 1000, tipo), 20000, "Busca de empresas");
+          })
+          .then(function (places) {
+            showStatus("Obtendo detalhes de " + places.length + " empresa(s)...", "info");
+            return withTimeout(Promise.all(places.slice(0, 20).map(getDetails)), 30000, "Detalhes das empresas");
+          })
+          .then(function (details) {
+            results = details.map(function (d) {
+              return {
+                name: d.name,
+                address: d.formatted_address || d.vicinity || "",
+                phone: d.formatted_phone_number || d.international_phone_number || "",
+                email: "",
+                website: d.website || ""
+              };
+            });
+            resultsCard.hidden = false;
+            renderResults();
+            showStatus(
+              results.length
+                ? "Busca concluída. " + results.length + " empresa(s) encontrada(s)."
+                : "Nenhuma empresa encontrada no raio informado.",
+              results.length ? "success" : "info"
+            );
+          })
+          .catch(function (err) {
+            log("ERRO: " + (err.message || err));
+            showStatus(err.message || "Erro inesperado na busca.", "error");
+          })
+          .finally(function () {
+            setLoading(false);
+          });
+      });
+
+      btnCsv.addEventListener("click", exportCsv);
+      btnExcel.addEventListener("click", exportExcel);
+
+      document.getElementById("cep").addEventListener("input", function () {
+        var v = this.value.replace(/\D/g, "").slice(0, 8);
+        if (v.length > 5) {
+          v = v.slice(0, 5) + "-" + v.slice(5);
+        }
+        this.value = v;
+      });
+    })();
+  </script>
+
+  <script
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA60IqDz1N46VfynzBIEYvg19_zRmwAPp4&libraries=places&callback=initMap"
+    async
+    defer
+  ></script>
+</body>
+</html>
