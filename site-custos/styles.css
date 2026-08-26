@@ -123,6 +123,13 @@ body {
   margin-bottom: 18px;
 }
 
+.picker-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
 .picker-label {
   display: block;
   font-size: 0.78rem;
@@ -130,7 +137,66 @@ body {
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--cinza-medio);
-  margin-bottom: 8px;
+}
+
+.add-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 0 12px;
+  border: none;
+  border-radius: 10px;
+  background: var(--azul);
+  color: var(--branco);
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+}
+
+.add-btn:active {
+  transform: scale(0.96);
+  background: var(--azul-escuro);
+}
+
+/* Form cards (projeto / participante) */
+.form-card {
+  margin-bottom: 18px;
+}
+
+.form-card form {
+  display: grid;
+  gap: 14px;
+}
+
+.form-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.form-actions .submit-btn {
+  flex: 1;
+}
+
+.ghost-btn {
+  min-height: 50px;
+  padding: 0 18px;
+  border: 1px solid #d8e0e6;
+  border-radius: 12px;
+  background: var(--branco);
+  color: var(--cinza-medio);
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.ghost-btn:active {
+  background: var(--cinza-claro);
 }
 
 .select-wrap {
@@ -554,6 +620,35 @@ body {
 
 .lanc-valor.entrada { color: var(--verde); }
 .lanc-valor.saida { color: var(--vermelho); }
+
+.lanc-actions {
+  flex-shrink: 0;
+  display: flex;
+  gap: 4px;
+}
+
+.lanc-action-btn {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--cinza-medio);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.lanc-action-btn.edit:hover {
+  background: rgba(18, 111, 234, 0.12);
+  color: var(--azul);
+}
+
+.lanc-action-btn.del:hover {
+  background: rgba(220, 38, 38, 0.10);
+  color: var(--vermelho);
+}
 
 /* Estados */
 .state {

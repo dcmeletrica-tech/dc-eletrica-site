@@ -36,7 +36,13 @@
   <main class="app-main">
     <!-- Seletor de projeto -->
     <section class="project-picker" aria-label="Selecionar projeto">
-      <label class="picker-label" for="projectSelect">Projeto</label>
+      <div class="picker-head">
+        <label class="picker-label" for="projectSelect">Projeto</label>
+        <button type="button" class="add-btn" id="btnAddProjeto" aria-label="Novo projeto">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+          <span>Novo</span>
+        </button>
+      </div>
       <div class="select-wrap">
         <select id="projectSelect">
           <option value="">Carregando projetos...</option>
@@ -45,6 +51,32 @@
           <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
         </span>
       </div>
+    </section>
+
+    <!-- Novo projeto -->
+    <section class="card form-card" id="projetoForm" hidden>
+      <h2 class="section-title">Novo projeto</h2>
+      <form id="projetoFormEl">
+        <div class="form-field">
+          <label for="projNome">Nome do projeto</label>
+          <input type="text" id="projNome" placeholder="Ex.: Projeto Solar Silva" required />
+        </div>
+        <div class="form-row">
+          <div class="form-field">
+            <label for="projData">Data de início</label>
+            <input type="date" id="projData" />
+          </div>
+          <div class="form-field">
+            <label for="projDesc">Descrição</label>
+            <input type="text" id="projDesc" placeholder="Opcional" />
+          </div>
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="submit-btn" id="btnSalvarProjeto">Salvar projeto</button>
+          <button type="button" class="ghost-btn" id="btnCancelarProjeto">Cancelar</button>
+        </div>
+        <p class="form-msg" id="projMsg" hidden></p>
+      </form>
     </section>
 
     <!-- Resumo -->
@@ -75,7 +107,7 @@
 
     <!-- Novo lançamento -->
     <section class="card novo-lanc" id="novoLanc" hidden>
-      <h2 class="section-title">Novo lançamento</h2>
+      <h2 class="section-title" id="lancTitle">Novo lançamento</h2>
       <form id="lancForm">
         <div class="form-row">
           <div class="form-field">
@@ -100,16 +132,45 @@
             <input type="date" id="lancData" />
           </div>
         </div>
-        <button type="submit" class="submit-btn" id="btnLancar">Lançar</button>
+        <div class="form-actions">
+          <button type="submit" class="submit-btn" id="btnLancar">Lançar</button>
+          <button type="button" class="ghost-btn" id="btnCancelarEdicao" hidden>Cancelar edição</button>
+        </div>
         <p class="form-msg" id="lancMsg" hidden></p>
       </form>
     </section>
 
     <!-- Participantes -->
     <section class="card participants" id="participants" hidden>
-      <h2 class="section-title">Divisão por participante</h2>
+      <div class="lancamentos-head">
+        <h2 class="section-title">Divisão por participante</h2>
+        <button type="button" class="add-btn" id="btnAddParticipante">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+          <span>Novo</span>
+        </button>
+      </div>
       <p class="section-hint">Calculado sobre o saldo do projeto (entradas − saídas).</p>
       <ul class="participant-list" id="participantList"></ul>
+    </section>
+
+    <!-- Novo participante -->
+    <section class="card form-card" id="participanteForm" hidden>
+      <h2 class="section-title">Novo participante</h2>
+      <form id="participanteFormEl">
+        <div class="form-field">
+          <label for="partNome">Nome</label>
+          <input type="text" id="partNome" placeholder="Ex.: Douglas" required />
+        </div>
+        <div class="form-field">
+          <label for="partPct">Porcentagem (%)</label>
+          <input type="number" id="partPct" inputmode="decimal" step="0.01" min="0.01" max="100" placeholder="Ex.: 50" required />
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="submit-btn" id="btnSalvarParticipante">Salvar participante</button>
+          <button type="button" class="ghost-btn" id="btnCancelarParticipante">Cancelar</button>
+        </div>
+        <p class="form-msg" id="partMsg" hidden></p>
+      </form>
     </section>
 
     <!-- Lançamentos -->

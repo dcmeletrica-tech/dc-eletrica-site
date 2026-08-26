@@ -39,10 +39,30 @@
     lancValor: document.getElementById("lancValor"),
     lancData: document.getElementById("lancData"),
     btnLancar: document.getElementById("btnLancar"),
-    lancMsg: document.getElementById("lancMsg")
+    lancMsg: document.getElementById("lancMsg"),
+    lancTitle: document.getElementById("lancTitle"),
+    btnCancelarEdicao: document.getElementById("btnCancelarEdicao"),
+    btnAddProjeto: document.getElementById("btnAddProjeto"),
+    projetoForm: document.getElementById("projetoForm"),
+    projetoFormEl: document.getElementById("projetoFormEl"),
+    projNome: document.getElementById("projNome"),
+    projData: document.getElementById("projData"),
+    projDesc: document.getElementById("projDesc"),
+    btnSalvarProjeto: document.getElementById("btnSalvarProjeto"),
+    btnCancelarProjeto: document.getElementById("btnCancelarProjeto"),
+    projMsg: document.getElementById("projMsg"),
+    btnAddParticipante: document.getElementById("btnAddParticipante"),
+    participanteForm: document.getElementById("participanteForm"),
+    participanteFormEl: document.getElementById("participanteFormEl"),
+    partNome: document.getElementById("partNome"),
+    partPct: document.getElementById("partPct"),
+    btnSalvarParticipante: document.getElementById("btnSalvarParticipante"),
+    btnCancelarParticipante: document.getElementById("btnCancelarParticipante"),
+    partMsg: document.getElementById("partMsg")
   };
 
   var lancTipo = "Entrada";
+  var editingCustoId = null;
 
   function fmt(v) {
     return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -241,9 +261,30 @@
       valor.className = "lanc-valor " + (isEntrada ? "entrada" : "saida");
       valor.textContent = (isEntrada ? "+" : "-") + fmt(Math.abs(Number(c.Valor) || 0));
 
+      var actions = document.createElement("div");
+      actions.className = "lanc-actions";
+
+      var btnEdit = document.createElement("button");
+      btnEdit.type = "button";
+      btnEdit.className = "lanc-action-btn edit";
+      btnEdit.setAttribute("aria-label", "Editar");
+      btnEdit.innerHTML = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>';
+      btnEdit.addEventListener("click", function () { startEditCusto(c.ID_Custo); });
+
+      var btnDel = document.createElement("button");
+      btnDel.type = "button";
+      btnDel.className = "lanc-action-btn del";
+      btnDel.setAttribute("aria-label", "Excluir");
+      btnDel.innerHTML = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>';
+      btnDel.addEventListener("click", function () { deleteCusto(c.ID_Custo); });
+
+      actions.appendChild(btnEdit);
+      actions.appendChild(btnDel);
+
       li.appendChild(icon);
       li.appendChild(body);
       li.appendChild(valor);
+      li.appendChild(actions);
       el.lancList.appendChild(li);
     });
   }
@@ -283,6 +324,70 @@
     });
   }
 
+  function checkConfig() {
+    return window.WEB_APP_URL && WEB_APP_URL.indexOf("COLE_A_URL") === -1;
+  }
+
+  function postAction(payload) {
+    return fetch(WEB_APP_URL, {
+      method: "POST",
+      mode: "no-cors",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify(payload)
+    });
+  }
+
+  function resetLancForm() {
+    editingCustoId = null;
+    el.lancForm.reset();
+    setLancTipo("Entrada");
+    el.lancTitle.textContent = "Novo lançamento";
+    el.btnLancar.textContent = "Lançar";
+    el.btnCancelarEdicao.hidden = true;
+    clearLancMsg();
+  }
+
+  function startEditCusto(idCusto) {
+    var custo = state.custos.find(function (c) { return c.ID_Custo === idCusto; });
+    if (!custo) return;
+    editingCustoId = idCusto;
+    setLancTipo(custo.Tipo);
+    el.lancDesc.value = custo.Descrição || "";
+    el.lancValor.value = custo.Valor;
+    if (custo.Data) {
+      var d = new Date(custo.Data);
+      el.lancData.value = d.getFullYear() + "-" +
+        String(d.getMonth() + 1).padStart(2, "0") + "-" +
+        String(d.getDate()).padStart(2, "0");
+    } else {
+      el.lancData.value = "";
+    }
+    el.lancTitle.textContent = "Editar lançamento";
+    el.btnLancar.textContent = "Salvar alterações";
+    el.btnCancelarEdicao.hidden = false;
+    clearLancMsg();
+    el.novoLanc.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  function deleteCusto(idCusto) {
+    var custo = state.custos.find(function (c) { return c.ID_Custo === idCusto; });
+    var label = custo ? (custo.Descrição || "este lançamento") : "este lançamento";
+    if (!window.confirm("Excluir \"" + label + "\"?")) return;
+    if (!checkConfig()) {
+      setLancMsg("Configure a URL do Apps Script no arquivo config.js.", false);
+      return;
+    }
+    postAction({ action: "deleteCusto", idCusto: idCusto })
+      .then(function () {
+        setLancMsg("Lançamento excluído. Atualizando...", true);
+        if (editingCustoId === idCusto) resetLancForm();
+        return loadAll();
+      })
+      .catch(function () {
+        setLancMsg("Falha ao excluir.", false);
+      });
+  }
+
   el.segTipo.addEventListener("click", function (e) {
     var btn = e.target.closest(".seg-btn");
     if (btn) setLancTipo(btn.getAttribute("data-tipo"));
@@ -308,32 +413,22 @@
       setLancMsg("Selecione um projeto.", false);
       return;
     }
-    if (!window.WEB_APP_URL || WEB_APP_URL.indexOf("COLE_A_URL") !== -1) {
+    if (!checkConfig()) {
       setLancMsg("Configure a URL do Apps Script no arquivo config.js.", false);
       return;
     }
 
     el.btnLancar.disabled = true;
-    el.btnLancar.textContent = "Lançando...";
+    el.btnLancar.textContent = "Salvando...";
 
-    var payload = {
-      idProjeto: state.selectedId,
-      tipo: lancTipo,
-      descricao: descricao,
-      valor: valor,
-      data: data
-    };
+    var payload = editingCustoId
+      ? { action: "updateCusto", idCusto: editingCustoId, tipo: lancTipo, descricao: descricao, valor: valor, data: data }
+      : { action: "addCusto", idProjeto: state.selectedId, tipo: lancTipo, descricao: descricao, valor: valor, data: data };
 
-    fetch(WEB_APP_URL, {
-      method: "POST",
-      mode: "no-cors",
-      headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify(payload)
-    })
+    postAction(payload)
       .then(function () {
-        setLancMsg("Lançamento enviado! Atualizando...", true);
-        el.lancForm.reset();
-        setLancTipo("Entrada");
+        setLancMsg(editingCustoId ? "Alterações salvas! Atualizando..." : "Lançamento enviado! Atualizando...", true);
+        resetLancForm();
         return loadAll();
       })
       .catch(function () {
@@ -341,15 +436,15 @@
       })
       .finally(function () {
         el.btnLancar.disabled = false;
-        el.btnLancar.textContent = "Lançar";
+        el.btnLancar.textContent = editingCustoId ? "Salvar alterações" : "Lançar";
       });
   });
 
+  el.btnCancelarEdicao.addEventListener("click", resetLancForm);
+
   el.select.addEventListener("change", function () {
     state.selectedId = el.select.value;
-    clearLancMsg();
-    el.lancForm.reset();
-    setLancTipo("Entrada");
+    resetLancForm();
     render();
   });
 
@@ -361,6 +456,125 @@
   });
 
   el.btnRetry.addEventListener("click", loadAll);
+
+  // ===== Novo projeto =====
+  function setProjMsg(msg, ok) {
+    el.projMsg.hidden = false;
+    el.projMsg.className = "form-msg " + (ok ? "ok" : "err");
+    el.projMsg.textContent = msg;
+  }
+
+  el.btnAddProjeto.addEventListener("click", function () {
+    el.projetoForm.hidden = false;
+    el.projetoForm.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+
+  el.btnCancelarProjeto.addEventListener("click", function () {
+    el.projetoForm.hidden = true;
+    el.projetoFormEl.reset();
+    el.projMsg.hidden = true;
+  });
+
+  el.projetoFormEl.addEventListener("submit", function (e) {
+    e.preventDefault();
+    var nome = el.projNome.value.trim();
+    if (!nome) {
+      setProjMsg("Informe o nome do projeto.", false);
+      return;
+    }
+    if (!checkConfig()) {
+      setProjMsg("Configure a URL do Apps Script no arquivo config.js.", false);
+      return;
+    }
+    el.btnSalvarProjeto.disabled = true;
+    el.btnSalvarProjeto.textContent = "Salvando...";
+    postAction({
+      action: "addProjeto",
+      nome: nome,
+      dataInicio: el.projData.value || "",
+      descricao: el.projDesc.value.trim()
+    })
+      .then(function () {
+        setProjMsg("Projeto criado! Atualizando...", true);
+        el.projetoFormEl.reset();
+        return loadAll();
+      })
+      .then(function () {
+        el.projetoForm.hidden = true;
+        el.projMsg.hidden = true;
+      })
+      .catch(function () {
+        setProjMsg("Falha ao criar projeto.", false);
+      })
+      .finally(function () {
+        el.btnSalvarProjeto.disabled = false;
+        el.btnSalvarProjeto.textContent = "Salvar projeto";
+      });
+  });
+
+  // ===== Novo participante =====
+  function setPartMsg(msg, ok) {
+    el.partMsg.hidden = false;
+    el.partMsg.className = "form-msg " + (ok ? "ok" : "err");
+    el.partMsg.textContent = msg;
+  }
+
+  el.btnAddParticipante.addEventListener("click", function () {
+    el.participanteForm.hidden = false;
+    el.participanteForm.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+
+  el.btnCancelarParticipante.addEventListener("click", function () {
+    el.participanteForm.hidden = true;
+    el.participanteFormEl.reset();
+    el.partMsg.hidden = true;
+  });
+
+  el.participanteFormEl.addEventListener("submit", function (e) {
+    e.preventDefault();
+    var nome = el.partNome.value.trim();
+    var pct = parseFloat(el.partPct.value);
+    if (!nome) {
+      setPartMsg("Informe o nome.", false);
+      return;
+    }
+    if (!pct || pct <= 0 || pct > 100) {
+      setPartMsg("Informe uma porcentagem entre 0 e 100.", false);
+      return;
+    }
+    if (!state.selectedId) {
+      setPartMsg("Selecione um projeto primeiro.", false);
+      return;
+    }
+    if (!checkConfig()) {
+      setPartMsg("Configure a URL do Apps Script no arquivo config.js.", false);
+      return;
+    }
+    el.btnSalvarParticipante.disabled = true;
+    el.btnSalvarParticipante.textContent = "Salvando...";
+    postAction({
+      action: "addParticipante",
+      idProjeto: state.selectedId,
+      nome: nome,
+      porcentagem: pct
+    })
+      .then(function () {
+        setPartMsg("Participante adicionado! Atualizando...", true);
+        el.participanteFormEl.reset();
+        return loadAll();
+      })
+      .then(function () {
+        el.participanteForm.hidden = true;
+        el.partMsg.hidden = true;
+      })
+      .catch(function () {
+        setPartMsg("Falha ao adicionar participante.", false);
+      })
+      .finally(function () {
+        el.btnSalvarParticipante.disabled = false;
+        el.btnSalvarParticipante.textContent = "Salvar participante";
+      });
+  });
 
   loadAll();
 })();
