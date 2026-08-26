@@ -11,6 +11,7 @@ const SITES = {
   "/": { dir: "site-eletrica" },
   "/cruzeiro": { dir: "site-cruzeiro" },
   "/busca-empresas": { dir: "site-busca-empresas" },
+  "/custos": { dir: "site-custos" },
 };
 
 function resolveSite(urlPath) {
@@ -21,6 +22,10 @@ function resolveSite(urlPath) {
   if (urlPath === "/busca-empresas" || urlPath.startsWith("/busca-empresas/")) {
     const rel = urlPath.slice("/busca-empresas".length) || "/";
     return { dir: path.join(__dirname, "site-busca-empresas"), rel };
+  }
+  if (urlPath === "/custos" || urlPath.startsWith("/custos/")) {
+    const rel = urlPath.slice("/custos".length) || "/";
+    return { dir: path.join(__dirname, "site-custos"), rel };
   }
   return { dir: path.join(__dirname, "site-eletrica"), rel: urlPath };
 }
