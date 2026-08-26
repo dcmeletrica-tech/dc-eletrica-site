@@ -5,7 +5,7 @@
   --card-2: #1a3050;
   --border: #24405f;
   --text: #eaf4ff;
-  --text-muted: #8fb3d9;
+  --text-muted: #a9c9ea;
   --accent: #2dd4bf;
   --accent-2: #38bdf8;
   --gold: #fbbf24;
@@ -355,13 +355,14 @@ td.valor.sugerida { color: var(--accent); font-weight: 600; }
 
 input.valor-pago {
   width: 130px;
-  padding: 8px 10px;
+  min-height: 44px;
+  padding: 10px 12px;
   border-radius: 10px;
   border: 1px solid var(--border);
   background: var(--bg);
   color: var(--text);
   font-family: inherit;
-  font-size: 0.95rem;
+  font-size: 1rem;
   font-variant-numeric: tabular-nums;
   transition: border-color 0.15s, box-shadow 0.15s;
 }
@@ -375,6 +376,14 @@ input.valor-pago:focus {
 input.valor-pago.has-value {
   border-color: rgba(52, 211, 153, 0.5);
   color: var(--green);
+}
+
+input.valor-pago {
+  cursor: text;
+}
+
+.summary-card {
+  cursor: default;
 }
 
 tfoot td {
@@ -467,4 +476,6 @@ tfoot td:first-child {
   .summary-value { font-size: 1.3rem; }
   .table-card, .howto { padding: 18px; }
   .voyage { margin-top: 26px; }
+  input.valor-pago { width: 100%; min-width: 120px; }
+  .table-hint { font-size: 0.82rem; }
 }
