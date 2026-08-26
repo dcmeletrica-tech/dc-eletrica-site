@@ -14,7 +14,11 @@ function doPost(e) {
     if (action === "updateCusto") return updateCusto(data);
     if (action === "deleteCusto") return deleteCusto(data);
     if (action === "addProjeto") return addProjeto(data);
+    if (action === "updateProjeto") return updateProjeto(data);
+    if (action === "deleteProjeto") return deleteProjeto(data);
     if (action === "addParticipante") return addParticipante(data);
+    if (action === "updateParticipante") return updateParticipante(data);
+    if (action === "deleteParticipante") return deleteParticipante(data);
     return json({ ok: false, error: "Ação desconhecida." });
   } catch (err) {
     return json({ ok: false, error: String(err) });
@@ -97,6 +101,37 @@ function addProjeto(data) {
   return json({ ok: true });
 }
 
+// Edita um projeto (pelo ID_Projeto)
+function updateProjeto(data) {
+  var idProjeto = data.idProjeto;
+  var nome = data.nome;
+  var dataInicio = data.dataInicio;
+  var descricao = data.descricao;
+  if (!idProjeto || !nome) return json({ ok: false, error: "Dados inválidos." });
+
+  var sheet = getSheetByHeader("ID_Projeto");
+  var row = findRowById(sheet, idProjeto);
+  if (!row) return json({ ok: false, error: "Projeto não encontrado." });
+
+  sheet.getRange(row, 2).setValue(nome);
+  sheet.getRange(row, 3).setValue(dataInicio ? new Date(dataInicio) : new Date());
+  sheet.getRange(row, 4).setValue(descricao || "");
+  return json({ ok: true });
+}
+
+// Exclui um projeto e seus lançamentos/participantes vinculados
+function deleteProjeto(data) {
+  var idProjeto = data.idProjeto;
+  var sheet = getSheetByHeader("ID_Projeto");
+  var row = findRowById(sheet, idProjeto);
+  if (!row) return json({ ok: false, error: "Projeto não encontrado." });
+  sheet.deleteRow(row);
+
+  deleteRowsByColumn(getSheetByHeader("ID_Custo"), "ID_Projeto", idProjeto);
+  deleteRowsByColumn(getSheetByHeader("ID_Participante"), "ID_Projeto", idProjeto);
+  return json({ ok: true });
+}
+
 // ============ PARTICIPANTES ============
 
 // Novo participante de um projeto
@@ -117,7 +152,50 @@ function addParticipante(data) {
   return json({ ok: true });
 }
 
+// Edita um participante (pelo ID_Participante)
+function updateParticipante(data) {
+  var idParticipante = data.idParticipante;
+  var nome = data.nome;
+  var pct = Number(data.porcentagem);
+  if (!idParticipante || !nome || isNaN(pct) || pct <= 0) {
+    return json({ ok: false, error: "Dados inválidos." });
+  }
+
+  var sheet = getSheetByHeader("ID_Participante");
+  var row = findRowById(sheet, idParticipante);
+  if (!row) return json({ ok: false, error: "Participante não encontrado." });
+
+  sheet.getRange(row, 3).setValue(nome);
+  sheet.getRange(row, 4).setValue(pct);
+  return json({ ok: true });
+}
+
+// Exclui um participante (pelo ID_Participante)
+function deleteParticipante(data) {
+  var idParticipante = data.idParticipante;
+  var sheet = getSheetByHeader("ID_Participante");
+  var row = findRowById(sheet, idParticipante);
+  if (!row) return json({ ok: false, error: "Participante não encontrado." });
+  sheet.deleteRow(row);
+  return json({ ok: true });
+}
+
 // ============ UTILITÁRIOS ============
+
+// Exclui todas as linhas de uma aba onde a coluna informada tem o valor
+function deleteRowsByColumn(sheet, columnHeader, value) {
+  var headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+  var colIndex = headers.indexOf(columnHeader) + 1;
+  if (colIndex === 0) return;
+  var lastRow = sheet.getLastRow();
+  if (lastRow < 2) return;
+  var values = sheet.getRange(2, colIndex, lastRow - 1, 1).getValues();
+  for (var i = values.length - 1; i >= 0; i--) {
+    if (String(values[i][0]) === String(value)) {
+      sheet.deleteRow(i + 2);
+    }
+  }
+}
 
 // Localiza a aba cujo cabeçalho da coluna A é o informado
 function getSheetByHeader(header) {

@@ -235,6 +235,26 @@ body {
   pointer-events: none;
 }
 
+.project-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.project-actions .ghost-btn {
+  flex: 1;
+  min-height: 44px;
+}
+
+.ghost-btn.danger {
+  color: var(--vermelho);
+  border-color: rgba(220, 38, 38, 0.35);
+}
+
+.ghost-btn.danger:active {
+  background: rgba(220, 38, 38, 0.08);
+}
+
 /* Summary */
 .summary {
   margin-bottom: 18px;
@@ -430,6 +450,13 @@ body {
 
 .participant-valor.receber { color: var(--verde); }
 .participant-valor.dever { color: var(--vermelho); }
+
+.participant-actions {
+  flex-shrink: 0;
+  display: flex;
+  gap: 2px;
+  margin-left: 4px;
+}
 
 /* Formulário de lançamento */
 .novo-lanc form {

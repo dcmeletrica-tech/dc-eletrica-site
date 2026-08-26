@@ -43,6 +43,10 @@
     lancTitle: document.getElementById("lancTitle"),
     btnCancelarEdicao: document.getElementById("btnCancelarEdicao"),
     btnAddProjeto: document.getElementById("btnAddProjeto"),
+    btnEditProjeto: document.getElementById("btnEditProjeto"),
+    btnDeleteProjeto: document.getElementById("btnDeleteProjeto"),
+    projectActions: document.getElementById("projectActions"),
+    projTitle: document.getElementById("projTitle"),
     projetoForm: document.getElementById("projetoForm"),
     projetoFormEl: document.getElementById("projetoFormEl"),
     projNome: document.getElementById("projNome"),
@@ -58,11 +62,14 @@
     partPct: document.getElementById("partPct"),
     btnSalvarParticipante: document.getElementById("btnSalvarParticipante"),
     btnCancelarParticipante: document.getElementById("btnCancelarParticipante"),
+    partTitle: document.getElementById("partTitle"),
     partMsg: document.getElementById("partMsg")
   };
 
   var lancTipo = "Entrada";
   var editingCustoId = null;
+  var editingProjetoId = null;
+  var editingParticipanteId = null;
 
   function fmt(v) {
     return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -130,7 +137,9 @@
       state.custos = rowsToObjects(results[2].table);
       populateProjects();
       if (state.projetos.length) {
-        state.selectedId = state.projetos[0].ID_Projeto;
+        var prevId = state.selectedId;
+        var stillExists = state.projetos.some(function (p) { return p.ID_Projeto === prevId; });
+        state.selectedId = stillExists ? prevId : state.projetos[0].ID_Projeto;
         el.select.value = state.selectedId;
         render();
       } else {
@@ -153,6 +162,7 @@
 
   function render() {
     var id = state.selectedId;
+    el.projectActions.hidden = false;
     var custos = state.custos.filter(function (c) { return c.ID_Projeto === id; });
     var participantes = state.participantes.filter(function (p) { return p.ID_Projeto === id; });
 
@@ -219,8 +229,29 @@
       right.appendChild(pctEl);
       right.appendChild(valorEl);
 
+      var actions = document.createElement("div");
+      actions.className = "participant-actions";
+
+      var btnEdit = document.createElement("button");
+      btnEdit.type = "button";
+      btnEdit.className = "lanc-action-btn edit";
+      btnEdit.setAttribute("aria-label", "Editar");
+      btnEdit.innerHTML = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>';
+      btnEdit.addEventListener("click", function () { startEditParticipante(p.ID_Participante); });
+
+      var btnDel = document.createElement("button");
+      btnDel.type = "button";
+      btnDel.className = "lanc-action-btn del";
+      btnDel.setAttribute("aria-label", "Excluir");
+      btnDel.innerHTML = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>';
+      btnDel.addEventListener("click", function () { deleteParticipante(p.ID_Participante); });
+
+      actions.appendChild(btnEdit);
+      actions.appendChild(btnDel);
+
       li.appendChild(left);
       li.appendChild(right);
+      li.appendChild(actions);
       el.participantList.appendChild(li);
     });
   }
@@ -469,22 +500,78 @@
 
   el.btnRetry.addEventListener("click", loadAll);
 
-  // ===== Novo projeto =====
+  // ===== Projetos =====
   function setProjMsg(msg, ok) {
     el.projMsg.hidden = false;
     el.projMsg.className = "form-msg " + (ok ? "ok" : "err");
     el.projMsg.textContent = msg;
   }
 
+  function resetProjetoForm() {
+    editingProjetoId = null;
+    el.projetoFormEl.reset();
+    el.projTitle.textContent = "Novo projeto";
+    el.btnSalvarProjeto.textContent = "Salvar projeto";
+    el.projMsg.hidden = true;
+  }
+
+  function startEditProjeto(idProjeto) {
+    var proj = state.projetos.find(function (p) { return p.ID_Projeto === idProjeto; });
+    if (!proj) return;
+    editingProjetoId = idProjeto;
+    el.projNome.value = proj.Nome || "";
+    if (proj.Data_Inicio) {
+      var d = new Date(proj.Data_Inicio);
+      el.projData.value = d.getFullYear() + "-" +
+        String(d.getMonth() + 1).padStart(2, "0") + "-" +
+        String(d.getDate()).padStart(2, "0");
+    } else {
+      el.projData.value = "";
+    }
+    el.projDesc.value = proj.Descrição || "";
+    el.projTitle.textContent = "Editar projeto";
+    el.btnSalvarProjeto.textContent = "Salvar alterações";
+    el.projMsg.hidden = true;
+    el.projetoForm.hidden = false;
+    el.projetoForm.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  function deleteProjeto(idProjeto) {
+    var proj = state.projetos.find(function (p) { return p.ID_Projeto === idProjeto; });
+    var label = proj ? proj.Nome : "este projeto";
+    if (!window.confirm("Excluir o projeto \"" + label + "\"? Isso apaga também os lançamentos e participantes dele.")) return;
+    if (!checkConfig()) {
+      setProjMsg("Configure a URL do Apps Script no arquivo config.js.", false);
+      return;
+    }
+    postAction({ action: "deleteProjeto", idProjeto: idProjeto })
+      .then(function () {
+        setProjMsg("Projeto excluído. Atualizando...", true);
+        if (editingProjetoId === idProjeto) resetProjetoForm();
+        return loadAll();
+      })
+      .catch(function () {
+        setProjMsg("Falha ao excluir projeto.", false);
+      });
+  }
+
   el.btnAddProjeto.addEventListener("click", function () {
+    resetProjetoForm();
     el.projetoForm.hidden = false;
     el.projetoForm.scrollIntoView({ behavior: "smooth", block: "start" });
   });
 
+  el.btnEditProjeto.addEventListener("click", function () {
+    if (state.selectedId) startEditProjeto(state.selectedId);
+  });
+
+  el.btnDeleteProjeto.addEventListener("click", function () {
+    if (state.selectedId) deleteProjeto(state.selectedId);
+  });
+
   el.btnCancelarProjeto.addEventListener("click", function () {
     el.projetoForm.hidden = true;
-    el.projetoFormEl.reset();
-    el.projMsg.hidden = true;
+    resetProjetoForm();
   });
 
   el.projetoFormEl.addEventListener("submit", function (e) {
@@ -500,15 +587,13 @@
     }
     el.btnSalvarProjeto.disabled = true;
     el.btnSalvarProjeto.textContent = "Salvando...";
-    postAction({
-      action: "addProjeto",
-      nome: nome,
-      dataInicio: el.projData.value || "",
-      descricao: el.projDesc.value.trim()
-    })
+    var payload = editingProjetoId
+      ? { action: "updateProjeto", idProjeto: editingProjetoId, nome: nome, dataInicio: el.projData.value || "", descricao: el.projDesc.value.trim() }
+      : { action: "addProjeto", nome: nome, dataInicio: el.projData.value || "", descricao: el.projDesc.value.trim() };
+    postAction(payload)
       .then(function () {
-        setProjMsg("Projeto criado! Atualizando...", true);
-        el.projetoFormEl.reset();
+        setProjMsg(editingProjetoId ? "Alterações salvas! Atualizando..." : "Projeto criado! Atualizando...", true);
+        resetProjetoForm();
         return loadAll();
       })
       .then(function () {
@@ -516,30 +601,70 @@
         el.projMsg.hidden = true;
       })
       .catch(function () {
-        setProjMsg("Falha ao criar projeto.", false);
+        setProjMsg("Falha ao salvar projeto.", false);
       })
       .finally(function () {
         el.btnSalvarProjeto.disabled = false;
-        el.btnSalvarProjeto.textContent = "Salvar projeto";
+        el.btnSalvarProjeto.textContent = editingProjetoId ? "Salvar alterações" : "Salvar projeto";
       });
   });
 
-  // ===== Novo participante =====
+  // ===== Participantes =====
   function setPartMsg(msg, ok) {
     el.partMsg.hidden = false;
     el.partMsg.className = "form-msg " + (ok ? "ok" : "err");
     el.partMsg.textContent = msg;
   }
 
+  function resetParticipanteForm() {
+    editingParticipanteId = null;
+    el.participanteFormEl.reset();
+    el.partTitle.textContent = "Novo participante";
+    el.btnSalvarParticipante.textContent = "Salvar participante";
+    el.partMsg.hidden = true;
+  }
+
+  function startEditParticipante(idParticipante) {
+    var part = state.participantes.find(function (p) { return p.ID_Participante === idParticipante; });
+    if (!part) return;
+    editingParticipanteId = idParticipante;
+    el.partNome.value = part.Nome || "";
+    el.partPct.value = part.Porcentagem;
+    el.partTitle.textContent = "Editar participante";
+    el.btnSalvarParticipante.textContent = "Salvar alterações";
+    el.partMsg.hidden = true;
+    el.participanteForm.hidden = false;
+    el.participanteForm.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  function deleteParticipante(idParticipante) {
+    var part = state.participantes.find(function (p) { return p.ID_Participante === idParticipante; });
+    var label = part ? part.Nome : "este participante";
+    if (!window.confirm("Excluir o participante \"" + label + "\"?")) return;
+    if (!checkConfig()) {
+      setPartMsg("Configure a URL do Apps Script no arquivo config.js.", false);
+      return;
+    }
+    postAction({ action: "deleteParticipante", idParticipante: idParticipante })
+      .then(function () {
+        setPartMsg("Participante excluído. Atualizando...", true);
+        if (editingParticipanteId === idParticipante) resetParticipanteForm();
+        return loadAll();
+      })
+      .catch(function () {
+        setPartMsg("Falha ao excluir participante.", false);
+      });
+  }
+
   el.btnAddParticipante.addEventListener("click", function () {
+    resetParticipanteForm();
     el.participanteForm.hidden = false;
     el.participanteForm.scrollIntoView({ behavior: "smooth", block: "start" });
   });
 
   el.btnCancelarParticipante.addEventListener("click", function () {
     el.participanteForm.hidden = true;
-    el.participanteFormEl.reset();
-    el.partMsg.hidden = true;
+    resetParticipanteForm();
   });
 
   el.participanteFormEl.addEventListener("submit", function (e) {
@@ -564,15 +689,13 @@
     }
     el.btnSalvarParticipante.disabled = true;
     el.btnSalvarParticipante.textContent = "Salvando...";
-    postAction({
-      action: "addParticipante",
-      idProjeto: state.selectedId,
-      nome: nome,
-      porcentagem: pct
-    })
+    var payload = editingParticipanteId
+      ? { action: "updateParticipante", idParticipante: editingParticipanteId, nome: nome, porcentagem: pct }
+      : { action: "addParticipante", idProjeto: state.selectedId, nome: nome, porcentagem: pct };
+    postAction(payload)
       .then(function () {
-        setPartMsg("Participante adicionado! Atualizando...", true);
-        el.participanteFormEl.reset();
+        setPartMsg(editingParticipanteId ? "Alterações salvas! Atualizando..." : "Participante adicionado! Atualizando...", true);
+        resetParticipanteForm();
         return loadAll();
       })
       .then(function () {
@@ -580,11 +703,11 @@
         el.partMsg.hidden = true;
       })
       .catch(function () {
-        setPartMsg("Falha ao adicionar participante.", false);
+        setPartMsg("Falha ao salvar participante.", false);
       })
       .finally(function () {
         el.btnSalvarParticipante.disabled = false;
-        el.btnSalvarParticipante.textContent = "Salvar participante";
+        el.btnSalvarParticipante.textContent = editingParticipanteId ? "Salvar alterações" : "Salvar participante";
       });
   });
 
