@@ -82,6 +82,16 @@
     return dd + "/" + mm + "/" + d.getFullYear();
   }
 
+  // Converte o valor de data vindo do gviz ("Date(2026,7,26)") em um Date válido.
+  function parseGvizDate(v) {
+    if (!v) return null;
+    if (v instanceof Date) return isNaN(v.getTime()) ? null : v;
+    var m = /^Date\((\d+),(\d+),(\d+)\)$/.exec(String(v));
+    if (m) return new Date(Number(m[1]), Number(m[2]), Number(m[3]));
+    var d = new Date(v);
+    return isNaN(d.getTime()) ? null : d;
+  }
+
   // Carrega a aba via JSONP (script tag), que funciona de qualquer origem
   // (inclusive abrindo o arquivo localmente via file://), sem depender de CORS.
   function fetchSheet(gid) {
@@ -262,8 +272,8 @@
     el.lancCount.textContent = list.length;
 
     var sorted = list.slice().sort(function (a, b) {
-      var da = a.Data ? new Date(a.Data) : new Date(0);
-      var db = b.Data ? new Date(b.Data) : new Date(0);
+      var da = parseGvizDate(a.Data) || new Date(0);
+      var db = parseGvizDate(b.Data) || new Date(0);
       return db - da;
     });
 
@@ -295,7 +305,7 @@
 
       var meta = document.createElement("div");
       meta.className = "lanc-meta";
-      meta.textContent = c.Data ? fmtDate(new Date(c.Data)) : "";
+      meta.textContent = c.Data ? fmtDate(parseGvizDate(c.Data)) : "";
 
       body.appendChild(desc);
       body.appendChild(meta);
@@ -398,7 +408,7 @@
     el.lancDesc.value = custo.Descrição || "";
     el.lancValor.value = custo.Valor;
     if (custo.Data) {
-      var d = new Date(custo.Data);
+      var d = parseGvizDate(custo.Data);
       el.lancData.value = d.getFullYear() + "-" +
         String(d.getMonth() + 1).padStart(2, "0") + "-" +
         String(d.getDate()).padStart(2, "0");
@@ -521,7 +531,7 @@
     editingProjetoId = idProjeto;
     el.projNome.value = proj.Nome || "";
     if (proj.Data_Inicio) {
-      var d = new Date(proj.Data_Inicio);
+      var d = parseGvizDate(proj.Data_Inicio);
       el.projData.value = d.getFullYear() + "-" +
         String(d.getMonth() + 1).padStart(2, "0") + "-" +
         String(d.getDate()).padStart(2, "0");
