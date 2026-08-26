@@ -81,8 +81,15 @@ h1, h2, h3 {
   font-size: 0.95rem;
 }
 
-.site-nav a:hover {
-  color: var(--amarelo);
+.site-nav a:focus-visible {
+  outline: 2px solid var(--amarelo);
+  outline-offset: 2px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .site-nav a:hover {
+    color: var(--amarelo);
+  }
 }
 
 /* Nav toggle (hamburger) */
@@ -162,15 +169,21 @@ h1, h2, h3 {
   font-size: 0.95rem;
   border: 2px solid transparent;
   cursor: pointer;
+  transition: transform 160ms ease-out, background 160ms ease, color 160ms ease, border-color 160ms ease;
+}
+
+.btn:active {
+  transform: scale(0.97);
+}
+
+.btn:focus-visible {
+  outline: 3px solid var(--amarelo);
+  outline-offset: 2px;
 }
 
 .btn-primary {
   background: var(--azul);
   color: var(--branco);
-}
-
-.btn-primary:hover {
-  background: #0b5cc4;
 }
 
 .btn-secondary {
@@ -179,9 +192,15 @@ h1, h2, h3 {
   border-color: var(--branco);
 }
 
-.btn-secondary:hover {
-  border-color: var(--amarelo);
-  color: var(--amarelo);
+@media (hover: hover) and (pointer: fine) {
+  .btn-primary:hover {
+    background: #0b5cc4;
+  }
+
+  .btn-secondary:hover {
+    border-color: var(--amarelo);
+    color: var(--amarelo);
+  }
 }
 
 /* Sections */
@@ -452,9 +471,20 @@ h1, h2, h3 {
   transition: transform 0.15s ease, background 0.15s ease;
 }
 
-.whatsapp-float:hover {
-  background: #1ebe5b;
-  transform: translateY(-2px);
+@media (hover: hover) and (pointer: fine) {
+  .whatsapp-float:hover {
+    background: #1ebe5b;
+    transform: translateY(-2px);
+  }
+}
+
+.whatsapp-float:active {
+  transform: scale(0.97);
+}
+
+.whatsapp-float:focus-visible {
+  outline: 3px solid var(--amarelo);
+  outline-offset: 2px;
 }
 
 @media (max-width: 520px) {
@@ -739,6 +769,68 @@ h1, h2, h3 {
 
   .benefit-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+/* Card hover micro-interactions (mouse only) */
+@media (hover: hover) and (pointer: fine) {
+  .step,
+  .benefit,
+  .audience,
+  .testimonial,
+  .faq-item {
+    transition: transform 200ms ease-out, box-shadow 200ms ease-out, border-color 200ms ease;
+  }
+
+  .step:hover,
+  .benefit:hover,
+  .audience:hover,
+  .testimonial:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(37, 49, 59, 0.12);
+  }
+
+  .faq-item:hover {
+    border-color: var(--azul);
+  }
+}
+
+/* Scroll reveal */
+.reveal {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 500ms ease-out, transform 500ms ease-out;
+}
+
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  .btn,
+  .whatsapp-float,
+  .step,
+  .benefit,
+  .audience,
+  .testimonial,
+  .faq-item {
+    transition: none;
+  }
+
+  .btn:active,
+  .whatsapp-float:active {
+    transform: none;
   }
 }
 
