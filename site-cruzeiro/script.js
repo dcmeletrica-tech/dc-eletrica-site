@@ -156,6 +156,15 @@
     document.getElementById("sum-devedor").textContent = fmt(d.saldoDevedor);
     document.getElementById("foot-pago").textContent = fmt(d.totalPago);
     document.getElementById("foot-restante").textContent = fmt(d.saldoDevedor);
+
+    // Barra de progresso da viagem
+    var pct = TOTAL > 0 ? Math.round((d.totalPago / TOTAL) * 100) : 0;
+    var voyagePct = document.getElementById("voyage-pct");
+    var voyageFill = document.getElementById("voyage-fill");
+    var voyageShip = document.getElementById("voyage-ship");
+    if (voyagePct) voyagePct.textContent = pct + "%";
+    if (voyageFill) voyageFill.style.width = pct + "%";
+    if (voyageShip) voyageShip.style.left = "calc(" + pct + "% - 11px)";
   }
 
   // Preenche os campos com o valor formatado em reais (usado ao carregar)
