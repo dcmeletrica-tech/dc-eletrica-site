@@ -296,6 +296,13 @@ body {
 }
 
 /* Participantes */
+.section-hint {
+  font-size: 0.82rem;
+  color: var(--cinza-medio);
+  margin-top: -8px;
+  margin-bottom: 14px;
+}
+
 .participant-list {
   list-style: none;
   display: grid;
@@ -311,16 +318,166 @@ body {
   border-radius: 12px;
 }
 
+.participant-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.participant-avatar {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--azul);
+  color: var(--branco);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
 .participant-name {
   font-weight: 600;
   font-size: 0.98rem;
 }
 
+.participant-right {
+  text-align: right;
+}
+
 .participant-pct {
+  display: block;
   font-family: var(--font-display);
   font-weight: 700;
   color: var(--azul);
+  font-size: 0.85rem;
+}
+
+.participant-valor {
+  display: block;
+  font-family: var(--font-display);
+  font-weight: 700;
   font-size: 0.95rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.participant-valor.receber { color: var(--verde); }
+.participant-valor.dever { color: var(--vermelho); }
+
+/* Formulário de lançamento */
+.novo-lanc form {
+  display: grid;
+  gap: 14px;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-field label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--cinza-medio);
+}
+
+.form-field input {
+  min-height: 48px;
+  padding: 0 14px;
+  border: 1px solid #d8e0e6;
+  border-radius: 12px;
+  background: var(--branco);
+  color: var(--grafite);
+  font-family: var(--font-body);
+  font-size: 1rem;
+}
+
+.form-field input:focus {
+  outline: none;
+  border-color: var(--azul);
+  box-shadow: 0 0 0 3px rgba(18, 111, 234, 0.18);
+}
+
+.seg-control {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  background: var(--cinza-claro);
+  padding: 4px;
+  border-radius: 12px;
+}
+
+.seg-btn {
+  min-height: 44px;
+  border: none;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--cinza-medio);
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.seg-btn.active {
+  background: var(--branco);
+  color: var(--azul);
+  box-shadow: 0 2px 6px rgba(37, 49, 59, 0.12);
+}
+
+.seg-btn.active[data-tipo="Saída"] {
+  color: #b8860b;
+}
+
+.submit-btn {
+  min-height: 50px;
+  border: none;
+  border-radius: 12px;
+  background: var(--azul);
+  color: var(--branco);
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+}
+
+.submit-btn:active {
+  transform: scale(0.98);
+  background: var(--azul-escuro);
+}
+
+.submit-btn:disabled {
+  background: #9db8e0;
+  cursor: not-allowed;
+}
+
+.form-msg {
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: 10px 12px;
+  border-radius: 10px;
+}
+
+.form-msg.ok {
+  background: rgba(22, 163, 74, 0.12);
+  color: var(--verde);
+}
+
+.form-msg.err {
+  background: rgba(220, 38, 38, 0.10);
+  color: var(--vermelho);
 }
 
 /* Lançamentos */

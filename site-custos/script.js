@@ -20,6 +20,7 @@
     btnRefresh: document.getElementById("btnRefresh"),
     btnRetry: document.getElementById("btnRetry"),
     summary: document.getElementById("summary"),
+    novoLanc: document.getElementById("novoLanc"),
     participants: document.getElementById("participants"),
     lancamentos: document.getElementById("lancamentos"),
     stateLoading: document.getElementById("stateLoading"),
@@ -31,8 +32,17 @@
     saldoBarFill: document.getElementById("saldo-bar-fill"),
     participantList: document.getElementById("participantList"),
     lancList: document.getElementById("lancList"),
-    lancCount: document.getElementById("lancCount")
+    lancCount: document.getElementById("lancCount"),
+    lancForm: document.getElementById("lancForm"),
+    segTipo: document.getElementById("segTipo"),
+    lancDesc: document.getElementById("lancDesc"),
+    lancValor: document.getElementById("lancValor"),
+    lancData: document.getElementById("lancData"),
+    btnLancar: document.getElementById("btnLancar"),
+    lancMsg: document.getElementById("lancMsg")
   };
+
+  var lancTipo = "Entrada";
 
   function fmt(v) {
     return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -121,6 +131,7 @@
     var saldo = entradas - saidas;
 
     el.summary.hidden = false;
+    el.novoLanc.hidden = false;
     el.sumSaldo.textContent = fmt(saldo);
     el.sumSaldo.className = "saldo-value " + (saldo >= 0 ? "positivo" : "negativo");
     el.sumEntradas.textContent = fmt(entradas);
@@ -130,11 +141,11 @@
     var pctEntrada = total > 0 ? Math.round((entradas / total) * 100) : 0;
     el.saldoBarFill.style.width = pctEntrada + "%";
 
-    renderParticipants(participantes);
+    renderParticipants(participantes, saldo);
     renderLancamentos(custos);
   }
 
-  function renderParticipants(list) {
+  function renderParticipants(list, saldo) {
     el.participants.hidden = false;
     el.participantList.innerHTML = "";
     if (!list.length) {
@@ -142,19 +153,42 @@
       return;
     }
     list.forEach(function (p) {
+      var pct = Number(p.Porcentagem) || 0;
+      var valor = saldo * (pct / 100);
+
       var li = document.createElement("li");
       li.className = "participant-item";
+
+      var left = document.createElement("div");
+      left.className = "participant-left";
+
+      var avatar = document.createElement("span");
+      avatar.className = "participant-avatar";
+      avatar.textContent = (p.Nome || "?").charAt(0).toUpperCase();
 
       var name = document.createElement("span");
       name.className = "participant-name";
       name.textContent = p.Nome;
 
-      var pct = document.createElement("span");
-      pct.className = "participant-pct";
-      pct.textContent = (Number(p.Porcentagem) || 0) + "%";
+      left.appendChild(avatar);
+      left.appendChild(name);
 
-      li.appendChild(name);
-      li.appendChild(pct);
+      var right = document.createElement("div");
+      right.className = "participant-right";
+
+      var pctEl = document.createElement("span");
+      pctEl.className = "participant-pct";
+      pctEl.textContent = pct + "%";
+
+      var valorEl = document.createElement("span");
+      valorEl.className = "participant-valor " + (valor >= 0 ? "receber" : "dever");
+      valorEl.textContent = (valor >= 0 ? "Recebe " : "Deve ") + fmt(Math.abs(valor));
+
+      right.appendChild(pctEl);
+      right.appendChild(valorEl);
+
+      li.appendChild(left);
+      li.appendChild(right);
       el.participantList.appendChild(li);
     });
   }
@@ -231,8 +265,91 @@
     el.lancamentos.hidden = true;
   }
 
+  function setLancMsg(msg, ok) {
+    el.lancMsg.hidden = false;
+    el.lancMsg.className = "form-msg " + (ok ? "ok" : "err");
+    el.lancMsg.textContent = msg;
+  }
+
+  function clearLancMsg() {
+    el.lancMsg.hidden = true;
+  }
+
+  function setLancTipo(tipo) {
+    lancTipo = tipo;
+    var btns = el.segTipo.querySelectorAll(".seg-btn");
+    btns.forEach(function (b) {
+      b.classList.toggle("active", b.getAttribute("data-tipo") === tipo);
+    });
+  }
+
+  el.segTipo.addEventListener("click", function (e) {
+    var btn = e.target.closest(".seg-btn");
+    if (btn) setLancTipo(btn.getAttribute("data-tipo"));
+  });
+
+  el.lancForm.addEventListener("submit", function (e) {
+    e.preventDefault();
+    clearLancMsg();
+
+    var descricao = el.lancDesc.value.trim();
+    var valor = parseFloat(el.lancValor.value);
+    var data = el.lancData.value || "";
+
+    if (!descricao) {
+      setLancMsg("Informe a descrição.", false);
+      return;
+    }
+    if (!valor || valor <= 0) {
+      setLancMsg("Informe um valor válido.", false);
+      return;
+    }
+    if (!state.selectedId) {
+      setLancMsg("Selecione um projeto.", false);
+      return;
+    }
+    if (!window.WEB_APP_URL || WEB_APP_URL.indexOf("COLE_A_URL") !== -1) {
+      setLancMsg("Configure a URL do Apps Script no arquivo config.js.", false);
+      return;
+    }
+
+    el.btnLancar.disabled = true;
+    el.btnLancar.textContent = "Lançando...";
+
+    var payload = {
+      idProjeto: state.selectedId,
+      tipo: lancTipo,
+      descricao: descricao,
+      valor: valor,
+      data: data
+    };
+
+    fetch(WEB_APP_URL, {
+      method: "POST",
+      mode: "no-cors",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify(payload)
+    })
+      .then(function () {
+        setLancMsg("Lançamento enviado! Atualizando...", true);
+        el.lancForm.reset();
+        setLancTipo("Entrada");
+        return loadAll();
+      })
+      .catch(function () {
+        setLancMsg("Falha ao enviar. Verifique a URL do Apps Script.", false);
+      })
+      .finally(function () {
+        el.btnLancar.disabled = false;
+        el.btnLancar.textContent = "Lançar";
+      });
+  });
+
   el.select.addEventListener("change", function () {
     state.selectedId = el.select.value;
+    clearLancMsg();
+    el.lancForm.reset();
+    setLancTipo("Entrada");
     render();
   });
 

@@ -73,9 +73,42 @@
       </div>
     </section>
 
+    <!-- Novo lançamento -->
+    <section class="card novo-lanc" id="novoLanc" hidden>
+      <h2 class="section-title">Novo lançamento</h2>
+      <form id="lancForm">
+        <div class="form-row">
+          <div class="form-field">
+            <label for="lancTipo">Tipo</label>
+            <div class="seg-control" id="segTipo">
+              <button type="button" class="seg-btn active" data-tipo="Entrada">Entrada</button>
+              <button type="button" class="seg-btn" data-tipo="Saída">Saída</button>
+            </div>
+          </div>
+        </div>
+        <div class="form-field">
+          <label for="lancDesc">Descrição</label>
+          <input type="text" id="lancDesc" placeholder="Ex.: Pagamento instalação" required />
+        </div>
+        <div class="form-row">
+          <div class="form-field">
+            <label for="lancValor">Valor (R$)</label>
+            <input type="number" id="lancValor" inputmode="decimal" step="0.01" min="0.01" placeholder="0,00" required />
+          </div>
+          <div class="form-field">
+            <label for="lancData">Data</label>
+            <input type="date" id="lancData" />
+          </div>
+        </div>
+        <button type="submit" class="submit-btn" id="btnLancar">Lançar</button>
+        <p class="form-msg" id="lancMsg" hidden></p>
+      </form>
+    </section>
+
     <!-- Participantes -->
     <section class="card participants" id="participants" hidden>
-      <h2 class="section-title">Participantes</h2>
+      <h2 class="section-title">Divisão por participante</h2>
+      <p class="section-hint">Calculado sobre o saldo do projeto (entradas − saídas).</p>
       <ul class="participant-list" id="participantList"></ul>
     </section>
 
@@ -103,6 +136,7 @@
     <p>Dados sincronizados com a planilha de custos.</p>
   </footer>
 
+  <script src="config.js"></script>
   <script src="script.js"></script>
 </body>
 </html>
