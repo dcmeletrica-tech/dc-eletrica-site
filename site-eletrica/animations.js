@@ -2,17 +2,11 @@
   "use strict";
 
   var prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var supportsIntersectionObserver = "IntersectionObserver" in window;
 
   function revealOnScroll() {
     var items = document.querySelectorAll(".reveal");
-    if (items.length === 0) {
-      return;
-    }
-
-    if (prefersReducedMotion || !("IntersectionObserver" in window)) {
-      items.forEach(function (el) {
-        el.classList.add("visible");
-      });
+    if (items.length === 0 || prefersReducedMotion || !supportsIntersectionObserver) {
       return;
     }
 
@@ -32,6 +26,7 @@
       { threshold: 0.15, rootMargin: "0px 0px -40px 0px" }
     );
 
+    document.documentElement.classList.add("reveal-ready");
     items.forEach(function (el) {
       observer.observe(el);
     });
@@ -39,14 +34,7 @@
 
   function animateStats() {
     var stats = document.querySelectorAll(".stat-value[data-count]");
-    if (stats.length === 0) {
-      return;
-    }
-
-    if (prefersReducedMotion) {
-      stats.forEach(function (el) {
-        el.textContent = el.getAttribute("data-count");
-      });
+    if (stats.length === 0 || prefersReducedMotion || !supportsIntersectionObserver) {
       return;
     }
 

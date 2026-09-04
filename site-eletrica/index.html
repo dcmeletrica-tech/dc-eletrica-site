@@ -1,23 +1,26 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" class="no-js">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Simule sua economia de energia solar — DC Elétrica</title>
-  <meta name="description" content="Descubra quanto sua empresa pode economizar com energia solar. Simule agora e receba uma proposta pelo WhatsApp." />
+  <meta name="description" content="Descubra o potencial de economia da sua conta de luz com energia solar. Simule para sua casa, comércio, indústria ou agronegócio." />
+  <script>document.documentElement.classList.replace("no-js", "js");</script>
   <link rel="icon" href="images/logo-simbolo.jpeg" type="image/jpeg" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=3" />
+  <link rel="stylesheet" href="styles.css?v=6" />
 </head>
 <body class="lead-body">
+  <a class="skip-link" href="#conteudo">Pular para o conteúdo principal</a>
   <header class="site-header">
     <div class="container header-inner">
       <a href="index.html" class="brand" aria-label="DC Elétrica — início">
-        <img src="images/logo-horizontal.jpeg" alt="DC Elétrica" class="brand-logo" width="200" />
+        <img src="images/logo-horizontal.jpeg" alt="DC Elétrica" class="brand-logo" width="200" height="133" />
       </a>
       <button
+        type="button"
         class="nav-toggle"
         id="nav-toggle"
         aria-label="Abrir menu"
@@ -31,9 +34,9 @@
       <nav class="site-nav" id="site-nav" aria-label="Navegação principal">
         <ul>
           <li><a href="#inicio">Início</a></li>
-          <li><a href="#como-funciona">Como Funciona</a></li>
           <li><a href="#simulador">Simulador</a></li>
           <li><a href="#beneficios">Benefícios</a></li>
+          <li><a href="#como-funciona">Como Funciona</a></li>
           <li><a href="#captura">Contato</a></li>
           <li><a href="#faq">FAQ</a></li>
         </ul>
@@ -41,25 +44,28 @@
     </div>
   </header>
 
-  <main>
+  <main id="conteudo" tabindex="-1">
     <section class="lead-hero" id="inicio">
       <div class="container lead-hero-inner">
         <div class="lead-hero-text">
-          <p class="hero-eyebrow">Energia solar para empresas</p>
-          <h1>Descubra quanto sua empresa pode economizar na conta de luz</h1>
+          <p class="hero-eyebrow">Energia solar sob medida</p>
+          <h1>Veja o potencial de economia da sua conta de luz</h1>
           <p class="lead-hero-sub">
-            Simule em menos de 1 minuto e receba uma proposta personalizada direto no seu WhatsApp.
+            Simule para sua casa, comércio, indústria ou propriedade rural e receba uma proposta personalizada no WhatsApp.
           </p>
+          <div class="hero-actions lead-hero-actions">
+            <a class="btn btn-primary" href="#simulador">Simular agora</a>
+          </div>
           <ul class="lead-benefits">
             <li><strong>Redução de até 95%</strong> na conta de energia</li>
             <li><strong>Projeto dimensionado</strong> para a sua necessidade</li>
-            <li><strong>Retorno do investimento</strong> em poucos anos</li>
-            <li><strong>Energia limpa</strong> e valorização do seu negócio</li>
+            <li><strong>Energia limpa</strong> e valorização do seu imóvel ou negócio</li>
           </ul>
         </div>
-        <div class="lead-hero-visual">
-          <img src="images/logo-principal.jpeg" alt="Símbolo DC Elétrica" class="lead-hero-logo" width="360" />
-        </div>
+        <figure class="lead-hero-visual">
+          <img src="images/hero-solar-installation-v1.jpg" alt="Painéis solares sobre a cobertura de um galpão, em imagem ilustrativa" class="lead-hero-image" width="1122" height="1402" fetchpriority="high" />
+          <figcaption>Imagem ilustrativa.</figcaption>
+        </figure>
       </div>
     </section>
 
@@ -84,51 +90,74 @@
       </div>
     </section>
 
-    <section class="section section-alt lead-how" id="como-funciona">
-      <div class="container">
-        <h2>Como funciona</h2>
-        <p class="section-intro">Do primeiro contato à energia gerada, um processo simples e transparente.</p>
-        <div class="steps">
-          <div class="step reveal">
-            <span class="step-num">1</span>
-            <h3>Simule grátis</h3>
-            <p>Preencha o simulador com os dados da sua conta de energia e veja o potencial de economia.</p>
-          </div>
-          <div class="step reveal">
-            <span class="step-num">2</span>
-            <h3>Receba a proposta</h3>
-            <p>Nossa equipe analisa o resultado e envia uma proposta personalizada pelo WhatsApp.</p>
-          </div>
-          <div class="step reveal">
-            <span class="step-num">3</span>
-            <h3>Visita técnica</h3>
-            <p>Fazemos a visita técnica para dimensionar o projeto com precisão e segurança.</p>
-          </div>
-          <div class="step reveal">
-            <span class="step-num">4</span>
-            <h3>Instalação e economia</h3>
-            <p>Instalamos o sistema e você começa a economizar na conta de luz.</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
     <section class="section lead-simulator" id="simulador">
       <div class="container">
+        <p class="section-kicker"><span>Etapa 1</span> Descubra seu potencial de economia</p>
         <h2>Simule agora</h2>
         <p class="section-intro">
-          Preencha os dados no simulador abaixo. Ao final, envie seus dados para receber a proposta no WhatsApp.
+          Preencha os dados no simulador abaixo. Em seguida, envie a solicitação para receber uma proposta pelo WhatsApp.
         </p>
         <div class="simulator-wrapper">
           <iframe
             id="solar-simulator"
             src="https://azume.com.br/simulador/61f9b8ab53cc900016438c9e"
             width="100%"
-            height="700"
+            height="820"
             title="Simulador de energia solar DC Elétrica"
             loading="lazy"
             allow="geolocation"
           ></iframe>
+        </div>
+        <p class="simulator-note">O simulador pode solicitar sua localização para completar a estimativa. Você pode recusar essa permissão.</p>
+      </div>
+    </section>
+
+    <section class="section lead-capture" id="captura">
+      <div class="container">
+        <div class="lead-capture-panel">
+          <p class="section-kicker"><span>Etapa 2</span> Receba uma proposta sob medida</p>
+          <h2 id="lead-title">Receba sua proposta no WhatsApp</h2>
+          <div class="capture-grid">
+            <div class="capture-form-col">
+              <p class="section-intro">
+                Deixe seus dados e nossa equipe envia o estudo de viabilidade e a proposta personalizada.
+              </p>
+              <div id="lead-form" class="contact-form lead-form js-only" role="group" aria-labelledby="lead-title">
+                <div class="form-field">
+                  <label for="lead-name">Nome</label>
+                  <input type="text" id="lead-name" autocomplete="name" aria-describedby="lead-error" required />
+                </div>
+                <div class="form-field">
+                  <label for="lead-phone">WhatsApp</label>
+                  <input type="tel" id="lead-phone" autocomplete="tel-national" inputmode="tel" placeholder="(00) 00000-0000" aria-describedby="lead-phone-hint lead-error" required />
+                  <p class="form-hint" id="lead-phone-hint">Informe o DDD e o número.</p>
+                </div>
+                <div class="form-field">
+                  <label for="lead-message">Mensagem (opcional)</label>
+                  <textarea id="lead-message" rows="3" placeholder="Ex.: quero uma proposta para minha empresa" aria-describedby="lead-error"></textarea>
+                </div>
+                <p class="form-error" id="lead-error" role="alert" hidden></p>
+                <p class="form-disclosure">Ao clicar, uma conversa será aberta no WhatsApp para você conferir e enviar a solicitação.</p>
+                <div class="form-actions">
+                  <button type="button" class="btn btn-primary" id="lead-submit">Abrir mensagem no WhatsApp</button>
+                  <button type="button" class="btn btn-quiet" id="lead-clear" hidden>Limpar campos</button>
+                </div>
+                <p class="form-success" id="lead-success" role="status" hidden>
+                  Confira a nova aba do WhatsApp e envie a mensagem para concluir o pedido. <a id="lead-retry" href="#" target="_blank" rel="noopener noreferrer" hidden>Abrir o WhatsApp novamente</a>
+                </p>
+              </div>
+              <p class="form-fallback">Prefere falar diretamente? <a href="https://wa.me/5519998093790?text=Ol%C3%A1%2C%20quero%20uma%20proposta%20de%20energia%20solar" target="_blank" rel="noopener noreferrer">Abra o WhatsApp</a>.</p>
+            </div>
+            <aside class="trust-panel" aria-labelledby="trust-title">
+              <h3 id="trust-title">Por que enviar seus dados?</h3>
+              <ul class="trust-list">
+                <li>Projeto dimensionado para o seu consumo, sem achismos.</li>
+                <li>Cuidamos da homologação junto à concessionária.</li>
+                <li>Redução de até 95% na conta de luz.</li>
+                <li>Sem compromisso: você confere a proposta antes de decidir.</li>
+              </ul>
+            </aside>
+          </div>
         </div>
       </div>
     </section>
@@ -169,7 +198,7 @@
     <section class="section lead-audience" id="para-quem">
       <div class="container">
         <h2>Para quem é a energia solar?</h2>
-        <p class="section-intro">Soluções sob medida para cada tipo de consumidor.</p>
+        <p class="section-intro">Soluções sob medida para casa, comércio, indústria e operações rurais.</p>
         <div class="audience-grid">
           <div class="audience reveal">
             <h3>Residencial</h3>
@@ -191,15 +220,53 @@
       </div>
     </section>
 
+    <section class="section section-alt lead-how" id="como-funciona">
+      <div class="container">
+        <h2>Como funciona</h2>
+        <p class="section-intro">Do primeiro contato à energia gerada, um processo simples e transparente.</p>
+        <div class="steps">
+          <div class="step reveal">
+            <span class="step-num">1</span>
+            <h3>Simule grátis</h3>
+            <p>Preencha o simulador com os dados da sua conta de energia e veja o potencial de economia.</p>
+          </div>
+          <div class="step reveal">
+            <span class="step-num">2</span>
+            <h3>Receba a proposta</h3>
+            <p>Nossa equipe analisa o resultado e envia uma proposta personalizada pelo WhatsApp.</p>
+          </div>
+          <div class="step reveal">
+            <span class="step-num">3</span>
+            <h3>Visita técnica</h3>
+            <p>Fazemos a visita técnica para dimensionar o projeto com precisão e segurança.</p>
+          </div>
+          <div class="step reveal">
+            <span class="step-num">4</span>
+            <h3>Instalação e economia</h3>
+            <p>Instalamos o sistema e você começa a economizar na conta de luz.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <section class="section section-alt lead-testimonials" id="depoimentos">
       <div class="container">
         <h2>Quem já economiza com a DC Elétrica</h2>
-        <p class="section-intro">Clientes que confiaram no nosso trabalho e reduziram seus custos.</p>
+        <p class="section-intro">Um resultado real e a palavra de quem confiou no nosso trabalho.</p>
+        <div class="case-featured reveal">
+          <div class="case-featured-copy">
+            <p class="case-tag">Case de sucesso</p>
+            <blockquote>
+              <p>"Reduzimos a conta da empresa em mais de 80% logo nos primeiros meses. Atendimento impecável do início ao fim."</p>
+              <footer>— Carlos M., indústria</footer>
+            </blockquote>
+          </div>
+          <div class="case-featured-stat">
+            <span class="case-stat-number">80%+</span>
+            <span class="case-stat-label">de redução na conta de luz nos primeiros meses</span>
+          </div>
+        </div>
         <div class="testimonial-grid">
-          <blockquote class="testimonial reveal">
-            <p>"Reduzimos a conta da empresa em mais de 80% logo nos primeiros meses. Atendimento impecável do início ao fim."</p>
-            <footer>— Carlos M., indústria</footer>
-          </blockquote>
           <blockquote class="testimonial reveal">
             <p>"O projeto foi dimensionado exatamente para a nossa necessidade. O retorno veio mais rápido do que esperávamos."</p>
             <footer>— Ana P., comércio</footer>
@@ -209,34 +276,6 @@
             <footer>— Roberto S., residencial</footer>
           </blockquote>
         </div>
-      </div>
-    </section>
-
-    <section class="section lead-capture" id="captura">
-      <div class="container">
-        <h2>Receba sua proposta no WhatsApp</h2>
-        <p class="section-intro">
-          Deixe seus dados e nossa equipe envia o estudo de viabilidade e a proposta personalizada.
-        </p>
-        <form id="lead-form" class="contact-form lead-form" novalidate>
-          <div class="form-field">
-            <label for="lead-name">Nome</label>
-            <input type="text" id="lead-name" name="name" autocomplete="name" required />
-          </div>
-          <div class="form-field">
-            <label for="lead-phone">WhatsApp</label>
-            <input type="tel" id="lead-phone" name="phone" autocomplete="tel" placeholder="(00) 00000-0000" required />
-          </div>
-          <div class="form-field">
-            <label for="lead-message">Mensagem (opcional)</label>
-            <textarea id="lead-message" name="message" rows="3" placeholder="Ex.: quero uma proposta para minha empresa"></textarea>
-          </div>
-          <p class="form-error" id="lead-error" role="alert" hidden></p>
-          <button type="submit" class="btn btn-primary">Enviar pelo WhatsApp</button>
-          <p class="form-success" id="lead-success" role="status" hidden>
-            Abrindo o WhatsApp... Se não abrir, clique no botão verde flutuante.
-          </p>
-        </form>
       </div>
     </section>
 
@@ -267,11 +306,20 @@
         </div>
       </div>
     </section>
+
+    <section class="section final-cta">
+      <div class="container final-cta-inner">
+        <p class="final-cta-kicker">Próximo passo</p>
+        <h2>Quer entender qual solução faz sentido para o seu consumo?</h2>
+        <p>Converse com a DC Elétrica e receba uma orientação inicial pelo WhatsApp.</p>
+        <a class="btn btn-primary" href="https://wa.me/5519998093790?text=Ol%C3%A1%2C%20quero%20entender%20qual%20solu%C3%A7%C3%A3o%20solar%20faz%20sentido%20para%20o%20meu%20consumo" target="_blank" rel="noopener noreferrer">Falar no WhatsApp</a>
+      </div>
+    </section>
   </main>
 
   <footer class="site-footer">
     <div class="container footer-inner">
-      <img src="images/logo-simbolo.jpeg" alt="" class="footer-logo" width="56" aria-hidden="true" />
+      <img src="images/logo-simbolo.jpeg" alt="" class="footer-logo" width="56" height="56" aria-hidden="true" />
       <p>© <span id="year">2026</span> DC Elétrica — Energia que conecta projetos.</p>
     </div>
   </footer>

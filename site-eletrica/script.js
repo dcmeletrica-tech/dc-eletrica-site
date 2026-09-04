@@ -6,84 +6,69 @@
     yearEl.textContent = String(new Date().getFullYear());
   }
 
-  var navToggle = document.getElementById("nav-toggle");
-  var siteNav = document.getElementById("site-nav");
-  if (navToggle && siteNav) {
-    navToggle.addEventListener("click", function () {
-      var open = siteNav.classList.toggle("open");
-      navToggle.setAttribute("aria-expanded", String(open));
-      navToggle.setAttribute("aria-label", open ? "Fechar menu" : "Abrir menu");
-    });
-
-    siteNav.querySelectorAll("a").forEach(function (link) {
-      link.addEventListener("click", function () {
-        siteNav.classList.remove("open");
-        navToggle.setAttribute("aria-expanded", "false");
-        navToggle.setAttribute("aria-label", "Abrir menu");
-      });
-    });
+  var captureSection = document.getElementById("captura");
+  var whatsappFloat = document.querySelector(".whatsapp-float");
+  if (captureSection && whatsappFloat && "IntersectionObserver" in window) {
+    var captureObserver = new IntersectionObserver(
+      function (entries) {
+        entries.forEach(function (entry) {
+          document.body.classList.toggle("has-capture-in-view", entry.isIntersecting);
+        });
+      },
+      { threshold: 0.12 }
+    );
+    captureObserver.observe(captureSection);
   }
 
-  var form = document.getElementById("contact-form");
-  if (!form) {
+  var navToggle = document.getElementById("nav-toggle");
+  var siteNav = document.getElementById("site-nav");
+  if (!navToggle || !siteNav) {
     return;
   }
 
-  var errorEl = document.getElementById("form-error");
-  var successEl = document.getElementById("form-success");
+  var mobileMenu = window.matchMedia("(max-width: 800px)");
 
-  function setInvalid(input, invalid) {
-    input.classList.toggle("invalid", invalid);
-  }
-
-  function validateField(input) {
-    var value = input.value.trim();
-    var valid = true;
-
-    if (input.required && value === "") {
-      valid = false;
-    }
-
-    if (input.type === "email" && value !== "") {
-      var emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRe.test(value)) {
-        valid = false;
-      }
-    }
-
-    setInvalid(input, !valid);
-    return valid;
-  }
-
-  function validateForm() {
-    var fields = form.querySelectorAll("input, textarea");
-    var allValid = true;
-    fields.forEach(function (input) {
-      if (!validateField(input)) {
-        allValid = false;
-      }
-    });
-    return allValid;
-  }
-
-  form.addEventListener("submit", function (event) {
-    event.preventDefault();
-    successEl.hidden = true;
-    errorEl.hidden = true;
-
-    if (!validateForm()) {
-      errorEl.textContent = "Preencha os campos obrigatórios corretamente.";
-      errorEl.hidden = false;
+  function setNavState(open) {
+    if (!mobileMenu.matches) {
+      siteNav.hidden = false;
+      siteNav.classList.remove("open");
+      navToggle.setAttribute("aria-expanded", "false");
+      navToggle.setAttribute("aria-label", "Abrir menu");
       return;
     }
 
-    successEl.hidden = false;
-    form.reset();
+    siteNav.hidden = !open;
+    siteNav.classList.toggle("open", open);
+    navToggle.setAttribute("aria-expanded", String(open));
+    navToggle.setAttribute("aria-label", open ? "Fechar menu" : "Abrir menu");
+  }
+
+  navToggle.addEventListener("click", function () {
+    setNavState(navToggle.getAttribute("aria-expanded") !== "true");
   });
 
-  form.querySelectorAll("input, textarea").forEach(function (input) {
-    input.addEventListener("input", function () {
-      validateField(input);
+  siteNav.querySelectorAll("a").forEach(function (link) {
+    link.addEventListener("click", function () {
+      setNavState(false);
     });
   });
+
+  document.addEventListener("keydown", function (event) {
+    if (event.key === "Escape" && mobileMenu.matches && !siteNav.hidden) {
+      setNavState(false);
+      navToggle.focus();
+    }
+  });
+
+  function syncNavForViewport() {
+    setNavState(false);
+  }
+
+  if (mobileMenu.addEventListener) {
+    mobileMenu.addEventListener("change", syncNavForViewport);
+  } else {
+    mobileMenu.addListener(syncNavForViewport);
+  }
+
+  setNavState(false);
 })();
