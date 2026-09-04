@@ -74,8 +74,10 @@
       var pago = pagos[i] || 0;
       totalPago += pago;
       var saldoRestante = saldoAnterior - pago;
-      var restantes = NUM_PARCELAS - (i + 1);
-      var sugerida = restantes > 0 ? saldoRestante / restantes : saldoRestante;
+      // Parcela sugerida = saldo em aberto dividido pelas parcelas que faltam,
+      // contando a atual. Pagando o sugerido todo mês, o valor se mantém estável.
+      var restantes = NUM_PARCELAS - i;
+      var sugerida = restantes > 0 ? saldoAnterior / restantes : saldoAnterior;
 
       linhas.push({
         parcela: i + 1,
