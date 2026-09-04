@@ -790,13 +790,6 @@ body.has-capture-in-view .whatsapp-float {
   object-fit: cover;
 }
 
-.lead-hero-visual figcaption {
-  margin-top: 0.55rem;
-  color: rgba(255, 255, 255, 0.72);
-  font-size: 0.75rem;
-  text-align: right;
-}
-
 .lead-simulator h2,
 .lead-capture h2 {
   font-size: 1.8rem;
