@@ -1,152 +1,159 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#25313b" />
   <title>Procuração para Distribuidora de Energia | DC Elétrica</title>
   <meta name="robots" content="noindex, nofollow" />
-  <link rel="icon" href="../site-eletrica/images/logo-simbolo.jpeg" type="image/jpeg" />
+  <link rel="icon" href="logo-simbolo.jpeg" type="image/jpeg" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=1" />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css?v=2" />
+  <script defer src="vendor/jspdf.umd.min.js?v=4.2.1"></script>
+  <script defer src="app.js?v=2"></script>
+  <script defer src="gate.js?v=1"></script>
 </head>
-<body>
+<body class="locked">
+  <div id="gate-overlay" class="gate-overlay" role="dialog" aria-modal="true" aria-labelledby="gate-titulo">
+    <form id="gate-form" class="gate-card">
+      <img src="logo-simbolo.jpeg" alt="" class="gate-logo" width="48" height="48" />
+      <h1 id="gate-titulo">Acesso restrito</h1>
+      <p>Digite a senha fornecida pela DC Elétrica para continuar.</p>
+      <input type="password" id="gate-senha" name="gateSenha" placeholder="Senha" autocomplete="off" autofocus />
+      <button type="submit" class="btn-primary">Entrar</button>
+      <p id="gate-erro" class="gate-erro" role="alert" hidden>Senha incorreta. Tente novamente.</p>
+    </form>
+  </div>
+  <a class="skip-link" href="#form-procuracao">Ir para o formulário</a>
   <header class="topbar">
     <div class="topbar-inner">
-      <img src="../site-eletrica/images/logo-simbolo.jpeg" alt="DC Elétrica" class="topbar-logo" />
-      <div>
-        <p class="topbar-title">DC Elétrica</p>
-        <p class="topbar-subtitle">Procuração para representação perante a distribuidora de energia</p>
+      <div class="brand">
+        <img src="logo-simbolo.jpeg" alt="" class="topbar-logo" width="48" height="48" />
+        <div><p class="topbar-title">DC Elétrica</p><p class="topbar-subtitle">Projetos e soluções em energia</p></div>
       </div>
+      <span class="topbar-context"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zM14 2v6h6M8 13h8M8 17h5" /></svg>Procurações</span>
     </div>
   </header>
-
-  <main class="wrap">
-    <section class="intro">
-      <h1>Preencha seus dados para gerar a procuração</h1>
-      <p>
-        Preencha as informações abaixo com atenção. Ao final, o PDF será gerado automaticamente
-        para você <strong>baixar, imprimir, assinar</strong> e enviar de volta para a DC Elétrica.
-      </p>
+  <main class="wrap" id="conteudo">
+    <section class="intro" aria-labelledby="titulo">
+      <p class="eyebrow">Documentos · Representação junto à distribuidora</p>
+      <h1 id="titulo">Prepare sua procuração.</h1>
+      <p class="intro-description">Preencha os dados de quem autoriza a representação. Depois, baixe o documento para conferir, assinar e enviar à DC Elétrica.</p>
+      <ol class="steps" aria-label="Como funciona">
+        <li><span class="step-number">1</span><span>Preencha os dados</span></li>
+        <li><span class="step-number">2</span><span>Baixe e confira</span></li>
+        <li><span class="step-number">3</span><span>Assine e envie</span></li>
+      </ol>
     </section>
-
-    <form id="form-procuracao" novalidate>
-      <fieldset class="card">
-        <legend>1. Tipo de outorgante</legend>
-        <div class="radio-group">
-          <label class="radio-option">
-            <input type="radio" name="tipoOutorgante" value="cpf" checked />
-            <span>Pessoa Física (CPF)</span>
-          </label>
-          <label class="radio-option">
-            <input type="radio" name="tipoOutorgante" value="cnpj" />
-            <span>Pessoa Jurídica (CNPJ)</span>
-          </label>
-        </div>
-      </fieldset>
-
-      <fieldset class="card" id="bloco-cpf">
-        <legend>2. Dados do outorgante (Pessoa Física)</legend>
-        <div class="field">
-          <label for="pf-nome">Nome completo *</label>
-          <input type="text" id="pf-nome" name="pfNome" autocomplete="name" />
-        </div>
-        <div class="field-row">
+    <noscript><div class="alert alert-error">Ative o JavaScript do navegador para preencher e gerar a procuração.</div></noscript>
+    <div class="workspace">
+      <form id="form-procuracao" novalidate aria-label="Dados para a procuração">
+        <div class="form-heading"><h2>Dados do documento</h2><span>* Campos obrigatórios</span></div>
+        <div id="form-erro" class="alert alert-error" role="alert" tabindex="-1" aria-labelledby="erro-titulo" hidden></div>
+        <fieldset class="card type-card">
+          <legend><span class="section-number">01</span> Quem vai autorizar?</legend>
+          <p class="section-description">Selecione o titular da procuração, chamado de outorgante.</p>
+          <div class="radio-group">
+            <label class="radio-option"><input type="radio" name="tipoOutorgante" value="cpf" checked /><span><strong>Pessoa física</strong><small>Em nome de uma pessoa · CPF</small></span></label>
+            <label class="radio-option"><input type="radio" name="tipoOutorgante" value="cnpj" /><span><strong>Pessoa jurídica</strong><small>Em nome de uma empresa · CNPJ</small></span></label>
+          </div>
+        </fieldset>
+        <fieldset class="card" id="bloco-cpf">
+          <legend><span class="section-number">02</span> Dados da pessoa física</legend>
           <div class="field">
-            <label for="pf-cpf">CPF *</label>
-            <input type="text" id="pf-cpf" name="pfCpf" inputmode="numeric" maxlength="14" placeholder="000.000.000-00" />
+            <label for="pf-nome">Nome completo <span aria-hidden="true">*</span></label>
+            <input type="text" id="pf-nome" name="pfNome" autocomplete="section-pf name" maxlength="140" required placeholder="Como aparece no seu documento" />
+          </div>
+          <div class="field-row">
+            <div class="field"><label for="pf-cpf">CPF <span aria-hidden="true">*</span></label><input type="text" id="pf-cpf" name="pfCpf" inputmode="numeric" maxlength="14" placeholder="000.000.000-00" required /></div>
+            <div class="field"><label for="pf-rg">RG <span class="optional">(opcional)</span></label><input type="text" id="pf-rg" name="pfRg" maxlength="30" placeholder="Número do RG" /></div>
           </div>
           <div class="field">
-            <label for="pf-rg">RG</label>
-            <input type="text" id="pf-rg" name="pfRg" placeholder="00.000.000-0" />
+            <label for="pf-endereco">Endereço completo <span aria-hidden="true">*</span></label>
+            <input type="text" id="pf-endereco" name="pfEndereco" autocomplete="section-pf street-address" maxlength="320" required placeholder="Rua, número e complemento" aria-describedby="pf-endereco-hint" />
+            <p class="hint" id="pf-endereco-hint">Inclua também bairro, cidade, estado e CEP.</p>
           </div>
-        </div>
-        <div class="field">
-          <label for="pf-endereco">Endereço completo *</label>
-          <input type="text" id="pf-endereco" name="pfEndereco" placeholder="Rua, número, bairro, cidade/UF, CEP" />
-        </div>
-      </fieldset>
-
-      <fieldset class="card" id="bloco-cnpj" hidden>
-        <legend>2. Dados do outorgante (Pessoa Jurídica)</legend>
-        <div class="field">
-          <label for="pj-razao">Razão social *</label>
-          <input type="text" id="pj-razao" name="pjRazao" />
-        </div>
-        <div class="field">
-          <label for="pj-cnpj">CNPJ *</label>
-          <input type="text" id="pj-cnpj" name="pjCnpj" inputmode="numeric" maxlength="18" placeholder="00.000.000/0000-00" />
-        </div>
-        <div class="field">
-          <label for="pj-endereco">Endereço da sede *</label>
-          <input type="text" id="pj-endereco" name="pjEndereco" placeholder="Rua, número, bairro, cidade/UF, CEP" />
-        </div>
-        <hr class="divider" />
-        <p class="section-note">Dados do representante legal que vai assinar</p>
-        <div class="field">
-          <label for="rep-nome">Nome completo do representante *</label>
-          <input type="text" id="rep-nome" name="repNome" />
-        </div>
-        <div class="field-row">
+        </fieldset>
+        <fieldset class="card" id="bloco-cnpj" hidden disabled>
+          <legend><span class="section-number">02</span> Dados da pessoa jurídica</legend>
+          <div class="field"><label for="pj-razao">Razão social <span aria-hidden="true">*</span></label><input type="text" id="pj-razao" name="pjRazao" autocomplete="organization" maxlength="180" required placeholder="Nome da empresa no CNPJ" /></div>
           <div class="field">
-            <label for="rep-cpf">CPF do representante *</label>
-            <input type="text" id="rep-cpf" name="repCpf" inputmode="numeric" maxlength="14" placeholder="000.000.000-00" />
+            <label for="pj-cnpj">CNPJ <span aria-hidden="true">*</span></label>
+            <input type="text" id="pj-cnpj" name="pjCnpj" inputmode="text" autocapitalize="characters" spellcheck="false" maxlength="18" placeholder="00.000.000/0000-00" required aria-describedby="cnpj-hint" />
+            <p class="hint" id="cnpj-hint">Aceita CNPJ numérico ou com letras.</p>
           </div>
+          <div class="field"><label for="pj-endereco">Endereço completo da sede <span aria-hidden="true">*</span></label><input type="text" id="pj-endereco" name="pjEndereco" autocomplete="section-pj street-address" maxlength="320" required placeholder="Rua, número, bairro, cidade/UF e CEP" /></div>
+          <div class="representative-heading"><h3>Quem vai assinar pela empresa?</h3><p>Informe os dados do representante legal.</p></div>
+          <div class="field"><label for="rep-nome">Nome completo do representante <span aria-hidden="true">*</span></label><input type="text" id="rep-nome" name="repNome" autocomplete="section-representante name" maxlength="140" required /></div>
+          <div class="field-row">
+            <div class="field"><label for="rep-cpf">CPF do representante <span aria-hidden="true">*</span></label><input type="text" id="rep-cpf" name="repCpf" inputmode="numeric" maxlength="14" placeholder="000.000.000-00" required /></div>
+            <div class="field"><label for="rep-rg">RG do representante <span class="optional">(opcional)</span></label><input type="text" id="rep-rg" name="repRg" maxlength="30" placeholder="Número do RG" /></div>
+          </div>
+        </fieldset>
+        <fieldset class="card">
+          <legend><span class="section-number">03</span> Distribuidora de energia</legend>
           <div class="field">
-            <label for="rep-rg">RG do representante</label>
-            <input type="text" id="rep-rg" name="repRg" placeholder="00.000.000-0" />
+            <label for="concessionaria">Concessionária / Distribuidora <span aria-hidden="true">*</span></label>
+            <input type="text" id="concessionaria" name="concessionaria" list="lista-concessionarias" maxlength="120" placeholder="Ex.: ELEKTRO REDES S.A." autocomplete="off" required aria-describedby="concessionaria-hint" />
+            <datalist id="lista-concessionarias"></datalist>
+            <p class="hint" id="concessionaria-hint">Consulte o nome na conta de energia. Escolha uma sugestão ou digite outra distribuidora.</p>
           </div>
-        </div>
-      </fieldset>
-
-      <fieldset class="card">
-        <legend>3. Concessionária / Distribuidora</legend>
-        <div class="field">
-          <label for="concessionaria">Concessionária / Distribuidora *</label>
-          <input type="text" id="concessionaria" name="concessionaria" list="lista-concessionarias" placeholder="Digite ou escolha na lista" autocomplete="off" />
-          <datalist id="lista-concessionarias"></datalist>
-          <p class="hint">Digite o nome da concessionária. Se ela já apareceu antes, basta selecionar na lista.</p>
-        </div>
-      </fieldset>
-
-      <fieldset class="card">
-        <legend>4. Local e data de assinatura</legend>
-        <div class="field-row">
-          <div class="field">
-            <label for="cidade">Cidade *</label>
-            <input type="text" id="cidade" name="cidade" />
+        </fieldset>
+        <fieldset class="card">
+          <legend><span class="section-number">04</span> Local e data de assinatura</legend>
+          <div class="field-row location-row">
+            <div class="field"><label for="cidade">Cidade <span aria-hidden="true">*</span></label><input type="text" id="cidade" name="cidade" autocomplete="address-level2" maxlength="100" required placeholder="Cidade onde vai assinar" /></div>
+            <div class="field field-uf">
+              <label for="uf">UF <span aria-hidden="true">*</span></label>
+              <select id="uf" name="uf" autocomplete="address-level1" required>
+                <option value="">Selecione</option>
+                <option value="AC">AC</option><option value="AL">AL</option><option value="AP">AP</option><option value="AM">AM</option><option value="BA">BA</option><option value="CE">CE</option><option value="DF">DF</option><option value="ES">ES</option><option value="GO">GO</option><option value="MA">MA</option><option value="MT">MT</option><option value="MS">MS</option><option value="MG">MG</option><option value="PA">PA</option><option value="PB">PB</option><option value="PR">PR</option><option value="PE">PE</option><option value="PI">PI</option><option value="RJ">RJ</option><option value="RN">RN</option><option value="RS">RS</option><option value="RO">RO</option><option value="RR">RR</option><option value="SC">SC</option><option value="SP">SP</option><option value="SE">SE</option><option value="TO">TO</option>
+              </select>
+            </div>
           </div>
-          <div class="field field-uf">
-            <label for="uf">UF *</label>
-            <input type="text" id="uf" name="uf" maxlength="2" placeholder="SP" />
-          </div>
+          <div class="field date-field"><label for="data-assinatura">Data de assinatura <span aria-hidden="true">*</span></label><input type="date" id="data-assinatura" name="dataAssinatura" required aria-describedby="data-hint" /><p class="hint" id="data-hint">Começamos com a data de hoje. Ajuste se for assinar em outro dia.</p></div>
+        </fieldset>
+        <div class="submit-area">
+          <p>Confira os dados antes de gerar. Eles serão incluídos na procuração.</p>
+          <button id="gerar-pdf" type="submit" class="btn-primary"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zM14 2v6h6M12 12v6m-3-3 3 3 3-3" /></svg>Gerar procuração em PDF</button>
+          <p id="status-geracao" class="hint" role="status"></p>
+          <p id="status-documento" class="document-status" role="status"></p>
         </div>
-        <p class="hint">A data de assinatura será preenchida automaticamente com a data de hoje.</p>
-      </fieldset>
-
-      <div id="form-erro" class="alert alert-error" hidden></div>
-
-      <div class="actions">
-        <button type="submit" class="btn-primary">Gerar procuração em PDF</button>
-      </div>
-    </form>
-
-    <section id="resultado" class="card resultado" hidden>
-      <h2>Procuração gerada</h2>
-      <p>Baixe o PDF, confira os dados, <strong>assine</strong> e envie de volta para a DC Elétrica.</p>
-      <div class="actions">
-        <a id="link-download" class="btn-primary" download>Baixar PDF</a>
-        <a id="link-whatsapp" class="btn-secondary" target="_blank" rel="noopener noreferrer">Enviar pelo WhatsApp</a>
-      </div>
-    </section>
+      </form>
+      <aside class="sidebar" aria-labelledby="resumo-titulo">
+        <div class="summary-panel">
+          <div class="summary-heading"><h2 id="resumo-titulo">Seu documento</h2><span class="format-label">PDF · A4</span></div>
+          <div class="document-sheet">
+            <div class="document-mark" aria-hidden="true"><span>DC</span><span>ELÉTRICA</span></div>
+            <p class="document-title">Procuração<br /> particular</p><p class="document-caption">Resumo para conferência</p>
+            <dl class="document-details">
+              <div><dt>Tipo de outorgante</dt><dd id="resumo-tipo">Pessoa física</dd></div>
+              <div><dt>Em nome de</dt><dd id="resumo-nome">Aguardando preenchimento</dd></div>
+              <div><dt>Distribuidora</dt><dd id="resumo-concessionaria">Aguardando preenchimento</dd></div>
+              <div><dt>Local de assinatura</dt><dd id="resumo-local">Aguardando preenchimento</dd></div>
+              <div><dt>Data de assinatura</dt><dd id="resumo-data">—</dd></div>
+            </dl>
+            <div class="document-recipient"><span>Procurador</span><strong>Douglas de Carvalho Melo</strong><small>Técnico em Eletrotécnica · DC Elétrica</small></div>
+          </div>
+          <div class="completion"><label id="progresso-texto" for="progresso-preenchimento">Preenchimento do formulário</label><progress id="progresso-preenchimento" max="7" value="0">0%</progress></div>
+          <p class="privacy-note"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 3 3 7v5c0 5 9 9 9 9s9-4 9-9V7zM8 12l3 3 5-6" /></svg><span>O PDF é gerado no seu navegador. Você escolhe quando compartilhar.</span></p>
+        </div>
+        <div class="help-note"><strong>Tenha em mãos</strong><p>Seu documento de identificação, endereço completo e o nome da distribuidora na conta de energia.</p></div>
+      </aside>
+      <section id="resultado" class="resultado" aria-labelledby="resultado-titulo" tabindex="-1" hidden>
+        <div class="result-heading"><span class="result-icon"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6" /></svg></span><div><p class="eyebrow">Documento pronto</p><h2 id="resultado-titulo">Sua procuração foi gerada.</h2></div></div>
+        <p id="resultado-arquivo" class="result-filename"></p><p>Baixe o PDF e confira as informações. Depois de assinar, envie o documento para a DC Elétrica.</p>
+        <div class="actions">
+          <a id="link-download" class="btn-primary" download>Baixar PDF</a>
+          <a id="link-visualizar" class="btn-secondary" target="_blank" rel="noopener noreferrer">Visualizar PDF <span class="sr-only">(abre em nova aba)</span></a>
+          <a id="link-whatsapp" class="btn-secondary" target="_blank" rel="noopener noreferrer">Abrir WhatsApp <span class="sr-only">(abre em nova aba)</span></a>
+        </div>
+        <p class="hint">No WhatsApp, anexe a procuração assinada à conversa. O arquivo não é enviado automaticamente.</p>
+      </section>
+    </div>
   </main>
-
-  <footer class="footer">
-    <p>DC Elétrica — este link é de uso restrito para preenchimento de procurações.</p>
-  </footer>
-
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="app.js?v=1"></script>
+  <footer class="footer"><div><span>DC Elétrica</span><p>Formulário para preparação de procurações.</p></div></footer>
 </body>
 </html>

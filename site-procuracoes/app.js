@@ -20,6 +20,7 @@
   ];
 
   const CONCESSIONARIAS_STORAGE_KEY = "dc-procuracoes-concessionarias";
+  const UFS = new Set(["AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA", "MT", "MS", "MG", "PA", "PB", "PR", "PE", "PI", "RJ", "RN", "RS", "RO", "RR", "SC", "SP", "SE", "TO"]);
 
   const MESES = [
     "janeiro", "fevereiro", "março", "abril", "maio", "junho",
@@ -36,6 +37,15 @@
   const resultado = document.getElementById("resultado");
   const linkDownload = document.getElementById("link-download");
   const linkWhatsapp = document.getElementById("link-whatsapp");
+  const linkVisualizar = document.getElementById("link-visualizar");
+  const inputData = document.getElementById("data-assinatura");
+  const botaoGerar = document.getElementById("gerar-pdf");
+  const statusGeracao = document.getElementById("status-geracao");
+  const statusDocumento = document.getElementById("status-documento");
+  const errosCampos = new Map();
+  let urlPdf = null;
+  let gerando = false;
+  let revisaoFormulario = 0;
 
   function onlyDigits(str) {
     return (str || "").replace(/\D/g, "");
@@ -50,12 +60,12 @@
   }
 
   function maskCnpj(value) {
-    const d = onlyDigits(value).slice(0, 14);
+    const d = value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 14);
     return d
-      .replace(/(\d{2})(\d)/, "$1.$2")
-      .replace(/(\d{3})(\d)/, "$1.$2")
-      .replace(/(\d{3})(\d)/, "$1/$2")
-      .replace(/(\d{4})(\d{1,2})$/, "$1-$2");
+      .replace(/^([A-Z0-9]{2})([A-Z0-9])/, "$1.$2")
+      .replace(/^([A-Z0-9]{2}\.[A-Z0-9]{3})([A-Z0-9])/, "$1.$2")
+      .replace(/^([A-Z0-9]{2}\.[A-Z0-9]{3}\.[A-Z0-9]{3})([A-Z0-9])/, "$1/$2")
+      .replace(/([A-Z0-9]{4})([A-Z0-9]{1,2})$/, "$1-$2");
   }
 
   function validaCpf(cpfInput) {
@@ -74,14 +84,16 @@
   }
 
   function validaCnpj(cnpjInput) {
-    const cnpj = onlyDigits(cnpjInput);
-    if (cnpj.length !== 14 || /^(\d)\1{13}$/.test(cnpj)) return false;
+    const cnpj = cnpjInput.toUpperCase().replace(/[.\/\-\s]/g, "");
+    if (!/^[A-Z0-9]{12}\d{2}$/.test(cnpj) || /^(\d)\1{13}$/.test(cnpj)) return false;
     const calc = (base) => {
-      let pesos = base.length === 12
+      const pesos = base.length === 12
         ? [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2]
         : [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
       let soma = 0;
-      for (let i = 0; i < base.length; i++) soma += parseInt(base[i], 10) * pesos[i];
+      // Receita Federal: valor ASCII menos 48, também compatível com CNPJ numérico.
+      // https://www.gov.br/receitafederal/pt-br/centrais-de-conteudo/publicacoes/documentos-tecnicos/cnpj/manual-dv-cnpj.pdf
+      for (let i = 0; i < base.length; i++) soma += (base.charCodeAt(i) - 48) * pesos[i];
       const resto = soma % 11;
       return resto < 2 ? 0 : 11 - resto;
     };
@@ -94,6 +106,12 @@
     const tipo = document.querySelector('input[name="tipoOutorgante"]:checked').value;
     blocoCpf.hidden = tipo !== "cpf";
     blocoCnpj.hidden = tipo !== "cnpj";
+    blocoCpf.disabled = tipo !== "cpf";
+    blocoCnpj.disabled = tipo !== "cnpj";
+    for (const id of errosCampos.keys()) {
+      if (document.getElementById(id).matches(":disabled")) limparErroCampo(id);
+    }
+    atualizarResumo();
   }
 
   radiosTipo.forEach((radio) => radio.addEventListener("change", toggleTipoOutorgante));
@@ -112,7 +130,9 @@
     try {
       const raw = localStorage.getItem(CONCESSIONARIAS_STORAGE_KEY);
       const lista = raw ? JSON.parse(raw) : [];
-      return Array.isArray(lista) ? lista : [];
+      if (!Array.isArray(lista)) return [];
+      return [...new Set(lista.filter((nome) => typeof nome === "string")
+        .map((nome) => nome.trim()).filter((nome) => nome && nome.length <= 120))].slice(-30);
     } catch (err) {
       return [];
     }
@@ -126,7 +146,7 @@
     if (!jaExiste) {
       salvas.push(nome);
       try {
-        localStorage.setItem(CONCESSIONARIAS_STORAGE_KEY, JSON.stringify(salvas));
+        localStorage.setItem(CONCESSIONARIAS_STORAGE_KEY, JSON.stringify(salvas.slice(-30)));
       } catch (err) {
         // localStorage indisponível: segue sem persistir, o nome digitado ainda é usado no PDF.
       }
@@ -143,15 +163,102 @@
     });
   }
 
-  function mostrarErro(mensagem) {
-    formErro.textContent = mensagem;
-    formErro.hidden = false;
-    formErro.scrollIntoView({ behavior: "smooth", block: "center" });
+  function renderizarErros(focar = false) {
+    formErro.replaceChildren();
+    formErro.hidden = errosCampos.size === 0;
+    if (!errosCampos.size) return;
+    const titulo = document.createElement("h3");
+    titulo.id = "erro-titulo";
+    titulo.textContent = "Confira os campos abaixo";
+    const lista = document.createElement("ul");
+    const ordemCampos = [...form.elements].map((campo) => campo.id);
+    const errosOrdenados = [...errosCampos].sort(([idA], [idB]) => ordemCampos.indexOf(idA) - ordemCampos.indexOf(idB));
+    errosOrdenados.forEach(([id, mensagem]) => {
+      const item = document.createElement("li");
+      const link = document.createElement("a");
+      link.href = `#${id}`;
+      link.textContent = mensagem;
+      link.addEventListener("click", (event) => {
+        event.preventDefault();
+        document.getElementById(id).focus();
+      });
+      item.appendChild(link);
+      lista.appendChild(item);
+    });
+    formErro.append(titulo, lista);
+    if (focar) formErro.focus();
   }
 
-  function limparErro() {
-    formErro.hidden = true;
-    formErro.textContent = "";
+  function limparErroCampo(id) {
+    const campo = document.getElementById(id);
+    const erroId = `${id}-erro`;
+    document.getElementById(erroId)?.remove();
+    campo.removeAttribute("aria-invalid");
+    const descricoes = (campo.getAttribute("aria-describedby") || "").split(/\s+/).filter((item) => item && item !== erroId);
+    if (descricoes.length) campo.setAttribute("aria-describedby", descricoes.join(" "));
+    else campo.removeAttribute("aria-describedby");
+    errosCampos.delete(id);
+    renderizarErros();
+  }
+
+  function limparErros() {
+    [...errosCampos.keys()].forEach(limparErroCampo);
+  }
+
+  function mostrarErros(erros) {
+    erros.forEach(({ id, mensagem }) => {
+      const campo = document.getElementById(id);
+      const erroId = `${id}-erro`;
+      const aviso = document.createElement("p");
+      aviso.id = erroId;
+      aviso.className = "field-error";
+      aviso.textContent = mensagem;
+      campo.closest(".field").appendChild(aviso);
+      campo.setAttribute("aria-invalid", "true");
+      campo.setAttribute("aria-describedby", [campo.getAttribute("aria-describedby"), erroId].filter(Boolean).join(" "));
+      errosCampos.set(id, mensagem);
+    });
+    renderizarErros(true);
+  }
+
+  function lerDataLocal(valor) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(valor)) return null;
+    const [ano, mes, dia] = valor.split("-").map(Number);
+    const data = new Date(0);
+    data.setHours(0, 0, 0, 0);
+    data.setFullYear(ano, mes - 1, dia);
+    return ano > 0 && data.getFullYear() === ano && data.getMonth() === mes - 1 && data.getDate() === dia ? data : null;
+  }
+
+  function atualizarResumo() {
+    const tipo = document.querySelector('input[name="tipoOutorgante"]:checked').value;
+    const valor = (id) => document.getElementById(id).value.trim();
+    const data = lerDataLocal(inputData.value);
+    const resumo = {
+      "resumo-tipo": tipo === "cpf" ? "Pessoa física" : "Pessoa jurídica",
+      "resumo-nome": valor(tipo === "cpf" ? "pf-nome" : "pj-razao") || "A preencher",
+      "resumo-concessionaria": valor("concessionaria") || "A preencher",
+      "resumo-local": [valor("cidade"), valor("uf")].filter(Boolean).join(" / ") || "A preencher",
+      "resumo-data": data ? data.toLocaleDateString("pt-BR") : "A preencher",
+    };
+    Object.entries(resumo).forEach(([id, texto]) => { document.getElementById(id).textContent = texto; });
+    const obrigatorios = [...form.querySelectorAll("[required]")].filter((campo) => !campo.matches(":disabled") && campo.type !== "radio");
+    const preenchidos = obrigatorios.filter((campo) => campo.value.trim()).length;
+    document.getElementById("progresso-texto").textContent = `${preenchidos} de ${obrigatorios.length} campos preenchidos`;
+    const progresso = document.getElementById("progresso-preenchimento");
+    progresso.max = obrigatorios.length || 1;
+    progresso.value = preenchidos;
+  }
+
+  function invalidarPdf() {
+    if (urlPdf) {
+      URL.revokeObjectURL(urlPdf);
+      urlPdf = null;
+      statusDocumento.textContent = "Os dados foram alterados. Gere novamente o PDF para baixar a versão atualizada.";
+    }
+    resultado.hidden = true;
+    [linkDownload, linkVisualizar, linkWhatsapp].forEach((link) => link.removeAttribute("href"));
+    linkDownload.removeAttribute("download");
   }
 
   function coletarDados() {
@@ -161,9 +268,12 @@
     const uf = document.getElementById("uf").value.trim().toUpperCase();
 
     const erros = [];
-    if (!concessionaria) erros.push("Informe a concessionária.");
-    if (!cidade) erros.push("Informe a cidade de assinatura.");
-    if (!uf || uf.length !== 2) erros.push("Informe a UF de assinatura (2 letras).");
+    const erro = (id, mensagem) => erros.push({ id, mensagem });
+    if (!concessionaria) erro("concessionaria", "Informe a concessionária.");
+    if (!cidade) erro("cidade", "Informe a cidade de assinatura.");
+    if (!UFS.has(uf)) erro("uf", "Selecione a UF de assinatura.");
+    const dataAssinatura = lerDataLocal(inputData.value);
+    if (!dataAssinatura) erro("data-assinatura", "Informe uma data de assinatura válida.");
 
     let outorgante = null;
 
@@ -172,10 +282,10 @@
       const cpf = document.getElementById("pf-cpf").value.trim();
       const rg = document.getElementById("pf-rg").value.trim();
       const endereco = document.getElementById("pf-endereco").value.trim();
-      if (!nome) erros.push("Informe o nome completo do outorgante.");
-      if (!cpf) erros.push("Informe o CPF do outorgante.");
-      else if (!validaCpf(cpf)) erros.push("O CPF do outorgante parece inválido. Confira os números.");
-      if (!endereco) erros.push("Informe o endereço completo do outorgante.");
+      if (!nome) erro("pf-nome", "Informe o nome completo do outorgante.");
+      if (!cpf) erro("pf-cpf", "Informe o CPF do outorgante.");
+      else if (!validaCpf(cpf)) erro("pf-cpf", "O CPF do outorgante parece inválido. Confira os números.");
+      if (!endereco) erro("pf-endereco", "Informe o endereço completo do outorgante.");
       outorgante = { tipo: "cpf", nome, cpf, rg, endereco };
     } else {
       const razaoSocial = document.getElementById("pj-razao").value.trim();
@@ -184,15 +294,21 @@
       const repNome = document.getElementById("rep-nome").value.trim();
       const repCpf = document.getElementById("rep-cpf").value.trim();
       const repRg = document.getElementById("rep-rg").value.trim();
-      if (!razaoSocial) erros.push("Informe a razão social.");
-      if (!cnpj) erros.push("Informe o CNPJ.");
-      else if (!validaCnpj(cnpj)) erros.push("O CNPJ parece inválido. Confira os números.");
-      if (!enderecoSede) erros.push("Informe o endereço da sede.");
-      if (!repNome) erros.push("Informe o nome do representante legal.");
-      if (!repCpf) erros.push("Informe o CPF do representante legal.");
-      else if (!validaCpf(repCpf)) erros.push("O CPF do representante parece inválido. Confira os números.");
+      if (!razaoSocial) erro("pj-razao", "Informe a razão social.");
+      if (!cnpj) erro("pj-cnpj", "Informe o CNPJ.");
+      else if (!validaCnpj(cnpj)) erro("pj-cnpj", "O CNPJ parece inválido. Confira os caracteres.");
+      if (!enderecoSede) erro("pj-endereco", "Informe o endereço da sede.");
+      if (!repNome) erro("rep-nome", "Informe o nome do representante legal.");
+      if (!repCpf) erro("rep-cpf", "Informe o CPF do representante legal.");
+      else if (!validaCpf(repCpf)) erro("rep-cpf", "O CPF do representante parece inválido. Confira os números.");
       outorgante = { tipo: "cnpj", razaoSocial, cnpj, enderecoSede, repNome, repCpf, repRg };
     }
+
+    form.querySelectorAll("input[maxlength]").forEach((campo) => {
+      if (!campo.matches(":disabled") && campo.value.length > campo.maxLength && !erros.some((item) => item.id === campo.id)) {
+        erro(campo.id, `Use no máximo ${campo.maxLength} caracteres neste campo.`);
+      }
+    });
 
     return {
       erros,
@@ -201,16 +317,19 @@
         concessionaria,
         cidade,
         uf,
+        dataAssinatura,
       },
     };
   }
 
-  function formatarDataHoje() {
-    const hoje = new Date();
-    return `${String(hoje.getDate()).padStart(2, "0")} de ${MESES[hoje.getMonth()]} de ${hoje.getFullYear()}`;
+  function formatarData(data) {
+    return `${String(data.getDate()).padStart(2, "0")} de ${MESES[data.getMonth()]} de ${data.getFullYear()}`;
   }
 
   function gerarPdf(dados) {
+    if (typeof window.jspdf?.jsPDF !== "function") {
+      throw new Error("A ferramenta de PDF não carregou. Confira sua conexão e recarregue a página para tentar novamente.");
+    }
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ unit: "pt", format: "a4" });
     const margem = 56;
@@ -246,7 +365,7 @@
     paragrafo("PROCURAÇÃO PARTICULAR", { bold: true, size: 15, center: true });
     novaLinha(14);
 
-    const dataAssinatura = formatarDataHoje();
+    const dataAssinatura = formatarData(dados.dataAssinatura);
     let abertura;
     if (dados.outorgante.tipo === "cpf") {
       const o = dados.outorgante;
@@ -270,54 +389,113 @@
     paragrafo(validade);
     novaLinha(30);
 
-    paragrafo(`${dados.cidade} - ${dados.uf}, ${dataAssinatura}.`);
+    const localData = `${dados.cidade} - ${dados.uf}, ${dataAssinatura}.`;
+    const assinatura = dados.outorgante.tipo === "cpf"
+      ? [{ texto: dados.outorgante.nome, bold: true }]
+      : [
+        { texto: dados.outorgante.repNome, bold: true },
+        { texto: `Representante de ${dados.outorgante.razaoSocial}` },
+        { texto: `CNPJ: ${dados.outorgante.cnpj}` },
+      ];
+    // Mantém local, espaço para assinatura e identificação na mesma página.
+    const alturaTexto = (texto, bold = false) => {
+      doc.setFont("helvetica", bold ? "bold" : "normal");
+      doc.setFontSize(11);
+      return doc.splitTextToSize(texto, larguraUtil).length * 15;
+    };
+    const alturaAssinatura = alturaTexto(localData) + 50 + 15 + 2
+      + assinatura.reduce((altura, item) => altura + alturaTexto(item.texto, item.bold), 0);
+    if (y + alturaAssinatura > alturaPagina - margem) {
+      doc.addPage();
+      y = margem;
+    }
+
+    paragrafo(localData);
     novaLinha(50);
 
     paragrafo("_________________________________________");
     novaLinha(2);
-    if (dados.outorgante.tipo === "cpf") {
-      paragrafo(dados.outorgante.nome, { bold: true });
-    } else {
-      paragrafo(dados.outorgante.repNome, { bold: true });
-      paragrafo(`Representante de ${dados.outorgante.razaoSocial}`);
-      paragrafo(`CNPJ: ${dados.outorgante.cnpj}`);
-    }
+    assinatura.forEach((item) => paragrafo(item.texto, { bold: item.bold }));
 
     const nomeArquivoBase = dados.outorgante.tipo === "cpf" ? dados.outorgante.nome : dados.outorgante.razaoSocial;
-    const nomeArquivo = `Procuracao_${nomeArquivoBase.replace(/[^a-zA-Z0-9]+/g, "_")}.pdf`;
+    const nomeSeguro = nomeArquivoBase.normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-zA-Z0-9]+/g, "_").replace(/^_+|_+$/g, "").slice(0, 100) || "Documento";
+    const nomeArquivo = `Procuracao_${nomeSeguro}.pdf`;
 
     return { doc, nomeArquivo };
   }
 
-  form.addEventListener("submit", (e) => {
+  form.addEventListener("submit", async (e) => {
     e.preventDefault();
-    limparErro();
+    if (gerando) return;
+    limparErros();
+    statusGeracao.textContent = "";
 
     const { erros, dados } = coletarDados();
     if (erros.length > 0) {
-      mostrarErro(erros.join(" "));
+      mostrarErros(erros);
       return;
     }
 
-    salvarNovaConcessionaria(dados.concessionaria);
-    preencherListaConcessionarias();
-
-    const { doc, nomeArquivo } = gerarPdf(dados);
-    const blob = doc.output("blob");
-    const url = URL.createObjectURL(blob);
-
-    linkDownload.href = url;
-    linkDownload.download = nomeArquivo;
-
-    const textoWhatsapp = encodeURIComponent(
-      `Olá! Gerei minha procuração (${nomeArquivo}). Já vou assinar e te envio em seguida.`
-    );
-    linkWhatsapp.href = `https://wa.me/${WHATSAPP_NUMERO}?text=${textoWhatsapp}`;
-
-    resultado.hidden = false;
-    resultado.scrollIntoView({ behavior: "smooth", block: "start" });
+    gerando = true;
+    const revisao = revisaoFormulario;
+    const conteudoBotao = [...botaoGerar.childNodes];
+    botaoGerar.disabled = true;
+    botaoGerar.textContent = "Gerando PDF…";
+    form.setAttribute("aria-busy", "true");
+    statusGeracao.textContent = "Preparando sua procuração…";
+    try {
+      // Permite que o navegador mostre o estado de geração antes de montar o arquivo.
+      await new Promise((resolve) => window.setTimeout(resolve, 0));
+      if (revisao !== revisaoFormulario) {
+        statusGeracao.textContent = "Os dados foram alterados. Gere novamente a procuração.";
+        return;
+      }
+      const { doc, nomeArquivo } = gerarPdf(dados);
+      const blob = doc.output("blob");
+      invalidarPdf();
+      urlPdf = URL.createObjectURL(blob);
+      linkDownload.href = urlPdf;
+      linkDownload.download = nomeArquivo;
+      linkVisualizar.href = urlPdf;
+      const textoWhatsapp = encodeURIComponent("Olá! Gerei minha procuração. Vou conferir, assinar e anexar o PDF nesta conversa.");
+      linkWhatsapp.href = `https://wa.me/${WHATSAPP_NUMERO}?text=${textoWhatsapp}`;
+      document.getElementById("resultado-arquivo").textContent = nomeArquivo;
+      salvarNovaConcessionaria(dados.concessionaria);
+      preencherListaConcessionarias();
+      statusDocumento.textContent = "";
+      statusGeracao.textContent = "PDF gerado. Confira os dados antes de assinar.";
+      resultado.hidden = false;
+      resultado.focus();
+    } catch (erro) {
+      invalidarPdf();
+      statusGeracao.textContent = typeof window.jspdf?.jsPDF !== "function"
+        ? "Não foi possível carregar a ferramenta de PDF. Confira a conexão e recarregue a página para tentar novamente."
+        : "Não foi possível gerar o PDF. Seus dados continuam no formulário; tente novamente.";
+    } finally {
+      gerando = false;
+      botaoGerar.disabled = false;
+      botaoGerar.replaceChildren(...conteudoBotao);
+      form.removeAttribute("aria-busy");
+    }
   });
 
+  function aoEditar(event) {
+    if (!event.target.matches("input, select, textarea")) return;
+    revisaoFormulario += 1;
+    invalidarPdf();
+    if (!gerando) statusGeracao.textContent = "";
+    if (errosCampos.has(event.target.id)) limparErroCampo(event.target.id);
+    atualizarResumo();
+  }
+  form.addEventListener("input", aoEditar);
+  form.addEventListener("change", aoEditar);
+
+  const hoje = new Date();
+  inputData.value = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, "0")}-${String(hoje.getDate()).padStart(2, "0")}`;
   toggleTipoOutorgante();
   preencherListaConcessionarias();
+  window.addEventListener("pagehide", (event) => {
+    if (!event.persisted && urlPdf) URL.revokeObjectURL(urlPdf);
+  });
 })();
