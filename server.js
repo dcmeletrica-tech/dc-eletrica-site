@@ -12,6 +12,7 @@ const SITES = {
   "/cruzeiro": { dir: "site-cruzeiro" },
   "/busca-empresas": { dir: "site-busca-empresas" },
   "/custos": { dir: "site-custos" },
+  "/procuracoes": { dir: "site-procuracoes" },
 };
 
 function resolveSite(urlPath) {
@@ -26,6 +27,10 @@ function resolveSite(urlPath) {
   if (urlPath === "/custos" || urlPath.startsWith("/custos/")) {
     const rel = urlPath.slice("/custos".length) || "/";
     return { dir: path.join(__dirname, "site-custos"), rel };
+  }
+  if (urlPath === "/procuracoes" || urlPath.startsWith("/procuracoes/")) {
+    const rel = urlPath.slice("/procuracoes".length) || "/";
+    return { dir: path.join(__dirname, "site-procuracoes"), rel };
   }
   return { dir: path.join(__dirname, "site-eletrica"), rel: urlPath };
 }
@@ -43,6 +48,7 @@ const MIME = {
 
 const server = http.createServer((req, res) => {
   const urlPath = decodeURIComponent(new URL(req.url, "http://localhost").pathname);
+
   const { dir, rel } = resolveSite(urlPath);
   let filePath = path.join(dir, rel === "/" ? "index.html" : rel);
 
