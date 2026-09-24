@@ -37,6 +37,15 @@ h1 { margin-top: 10px; font: 600 clamp(30px, 3.4vw, 42px)/1.16 var(--fonte-titul
 .steps li + li::before { content: ""; width: 28px; height: 1px; margin-right: 16px; background: #b7c2cb; }
 .step-number { display: grid; place-items: center; width: 25px; height: 25px; flex-shrink: 0; border: 1px solid #b7c2cb; border-radius: 50%; font: 500 12px var(--fonte-titulo); }
 .steps li:first-child .step-number { background: var(--grafite); border-color: var(--grafite); color: var(--branco); }
+.toggle-switch { display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 600; cursor: pointer; margin-bottom: 4px; }
+.toggle-switch input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.toggle-track { position: relative; width: 38px; height: 22px; flex-shrink: 0; border-radius: 999px; background: var(--borda-campo); transition: background .18s; }
+.toggle-track::after { content: ""; position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; border-radius: 50%; background: var(--branco); transition: transform .18s; }
+.toggle-switch input:checked + .toggle-track { background: var(--azul); }
+.toggle-switch input:checked + .toggle-track::after { transform: translateX(16px); }
+.toggle-switch input:focus-visible + .toggle-track { outline: 3px solid var(--azul); outline-offset: 3px; }
+.toggle-content { border: 0; padding: 14px 0 0; margin: 10px 0 0; }
+.toggle-content:disabled { display: none; }
 .workspace { display: grid; grid-template-columns: minmax(0, 1fr) 320px; align-items: start; gap: 28px; }
 form { min-width: 0; }
 .form-heading { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px; margin-bottom: 22px; }

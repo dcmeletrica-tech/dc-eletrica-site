@@ -42,6 +42,8 @@
   const botaoGerar = document.getElementById("gerar-pdf");
   const statusGeracao = document.getElementById("status-geracao");
   const statusDocumento = document.getElementById("status-documento");
+  const ucAtivar = document.getElementById("uc-ativar");
+  const blocoUc = document.getElementById("bloco-uc");
   const errosCampos = new Map();
   let urlPdf = null;
   let gerando = false;
@@ -115,6 +117,16 @@
   }
 
   radiosTipo.forEach((radio) => radio.addEventListener("change", toggleTipoOutorgante));
+
+  function toggleUc() {
+    const ligado = ucAtivar.checked;
+    blocoUc.disabled = !ligado;
+    if (!ligado) {
+      document.getElementById("uc-numero").value = "";
+      document.getElementById("uc-endereco").value = "";
+    }
+  }
+  ucAtivar.addEventListener("change", toggleUc);
 
   document.getElementById("pf-cpf").addEventListener("input", (e) => {
     e.target.value = maskCpf(e.target.value);
@@ -310,6 +322,13 @@
       }
     });
 
+    let unidadeConsumidora = null;
+    if (ucAtivar.checked) {
+      const numero = document.getElementById("uc-numero").value.trim();
+      const endereco = document.getElementById("uc-endereco").value.trim();
+      if (numero || endereco) unidadeConsumidora = { numero, endereco };
+    }
+
     return {
       erros,
       dados: {
@@ -318,6 +337,7 @@
         cidade,
         uf,
         dataAssinatura,
+        unidadeConsumidora,
       },
     };
   }
@@ -380,6 +400,14 @@
     const poderes1 = `Ao procurador são conferidos poderes para assinar e representar a outorgante perante a concessionária ${dados.concessionaria}, podendo tratar de disponibilidade de energia elétrica, elaboração de projetos, execução de obras de redes em média e baixa tensão e subestações elétricas, aumento de carga instalada e demanda, consultoria, extratos de faturas, contratos de demanda, energia provisória e solicitação de novas unidades consumidoras, inclusive incorporação de redes particulares.`;
     paragrafo(poderes1);
     novaLinha(10);
+
+    if (dados.unidadeConsumidora && (dados.unidadeConsumidora.numero || dados.unidadeConsumidora.endereco)) {
+      const partes = [];
+      if (dados.unidadeConsumidora.numero) partes.push(`UC nº ${dados.unidadeConsumidora.numero}`);
+      if (dados.unidadeConsumidora.endereco) partes.push(`instalação em ${dados.unidadeConsumidora.endereco}`);
+      paragrafo(`Esta procuração refere-se especificamente à ${partes.join(", ")}.`);
+      novaLinha(10);
+    }
 
     const poderes2 = "Os poderes abrangem a assinatura do projeto elétrico, das documentações pertinentes ao projeto e do Termo de Responsabilidade Técnica (TRT), que se fizerem necessários perante o CFT, bem como dos demais documentos de habilitação e outros perante os órgãos competentes, inclusive os de infraestrutura, viação e obras públicas e meio ambiente, quando necessários e pertinentes aos serviços elétricos.";
     paragrafo(poderes2);
@@ -494,6 +522,7 @@
   const hoje = new Date();
   inputData.value = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, "0")}-${String(hoje.getDate()).padStart(2, "0")}`;
   toggleTipoOutorgante();
+  toggleUc();
   preencherListaConcessionarias();
   window.addEventListener("pagehide", (event) => {
     if (!event.persisted && urlPdf) URL.revokeObjectURL(urlPdf);

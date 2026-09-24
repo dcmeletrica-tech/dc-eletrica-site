@@ -115,6 +115,16 @@
           </div>
           <div class="field date-field"><label for="data-assinatura">Data de assinatura <span aria-hidden="true">*</span></label><input type="date" id="data-assinatura" name="dataAssinatura" required aria-describedby="data-hint" /><p class="hint" id="data-hint">Começamos com a data de hoje. Ajuste se for assinar em outro dia.</p></div>
         </fieldset>
+        <fieldset class="card">
+          <legend><span class="section-number">05</span> Unidade consumidora <span class="optional">(opcional)</span></legend>
+          <label class="toggle-switch"><input type="checkbox" id="uc-ativar" /><span class="toggle-track" aria-hidden="true"></span><span>Incluir número da UC e endereço da instalação</span></label>
+          <fieldset id="bloco-uc" class="toggle-content" disabled>
+            <div class="field-row">
+              <div class="field"><label for="uc-numero">Número da UC <span class="optional">(opcional)</span></label><input type="text" id="uc-numero" name="ucNumero" maxlength="30" placeholder="Consulte na conta de energia" /></div>
+            </div>
+            <div class="field"><label for="uc-endereco">Endereço da instalação <span class="optional">(opcional)</span></label><input type="text" id="uc-endereco" name="ucEndereco" maxlength="320" placeholder="Preencha se for diferente do endereço acima" /></div>
+          </fieldset>
+        </fieldset>
         <div class="submit-area">
           <p>Confira os dados antes de gerar. Eles serão incluídos na procuração.</p>
           <button id="gerar-pdf" type="submit" class="btn-primary"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zM14 2v6h6M12 12v6m-3-3 3 3 3-3" /></svg>Gerar procuração em PDF</button>

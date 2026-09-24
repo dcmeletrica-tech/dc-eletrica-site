@@ -47,7 +47,14 @@ const MIME = {
 };
 
 const server = http.createServer((req, res) => {
-  const urlPath = decodeURIComponent(new URL(req.url, "http://localhost").pathname);
+  const requestUrl = new URL(req.url, "http://localhost");
+  const urlPath = decodeURIComponent(requestUrl.pathname);
+
+  if (urlPath === "/procuracoes") {
+    res.writeHead(308, { Location: `/procuracoes/${requestUrl.search}` });
+    res.end();
+    return;
+  }
 
   const { dir, rel } = resolveSite(urlPath);
   let filePath = path.join(dir, rel === "/" ? "index.html" : rel);
