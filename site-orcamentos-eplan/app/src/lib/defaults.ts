@@ -8,6 +8,7 @@ import type {
   QuickEstimate,
   ServiceType,
 } from "../types/budget";
+import { BRAND_SIMBOLO } from "../assets/brand";
 
 export const SCHEMA_VERSION = 1;
 
@@ -89,7 +90,7 @@ export const DEFAULT_SETTINGS: BudgetSettings = {
     phone: "",
     email: "",
     address: "",
-    logoDataUrl: "",
+    logoDataUrl: BRAND_SIMBOLO,
   },
   defaults: {
     hourlyRate: 200,

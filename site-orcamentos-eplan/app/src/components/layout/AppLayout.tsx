@@ -2,6 +2,7 @@ import { useState } from "react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { Calculator, FileText, LayoutDashboard, Menu, Moon, Settings, Sun, X } from "lucide-react";
 import { useAppData } from "../../app/store";
+import { BRAND_NAME, BRAND_SIMBOLO } from "../../assets/brand";
 
 const NAV = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard, end: true },
@@ -101,13 +102,13 @@ export default function AppLayout() {
 function Brand({ compact }: { compact?: boolean }) {
   return (
     <div className="flex items-center gap-2.5">
-      <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-900 text-sm font-black text-white dark:bg-brand-600">
-        OE
+      <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white ring-1 ring-slate-200 dark:ring-slate-700">
+        <img src={BRAND_SIMBOLO} alt={BRAND_NAME} className="h-8 w-8 object-contain" />
       </div>
       <div className="leading-tight">
         <p className="text-sm font-bold text-slate-900 dark:text-slate-100">OrçaEng</p>
         {!compact ? (
-          <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400">Orçamentos de engenharia</p>
+          <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400">{BRAND_NAME}</p>
         ) : null}
       </div>
     </div>

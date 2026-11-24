@@ -1,10 +1,26 @@
-import { describe, expect, it } from "vitest";
-import { buildInternalPdf, buildProposalPdf, buildWhatsAppSummary } from "../services/exportPdf";
-import { createBudget, DEFAULT_SETTINGS } from "../lib/defaults";
-import type { Budget } from "../types/budget";
+import { describe, expect, it, vi } from "vitest";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+import type { Budget, BudgetSettings } from "../types/budget";
+
+vi.mock("../assets/brand", async () => {
+  const fs = await import("node:fs");
+  const path = await import("node:path");
+  const file = path.join(process.cwd(), "src", "assets", "logo-simbolo.jpeg");
+  const dataUrl = `data:image/jpeg;base64,${fs.readFileSync(file).toString("base64")}`;
+  return { BRAND_SIMBOLO: dataUrl, BRAND_HORIZONTAL: dataUrl, BRAND_NAME: "DC Elétrica" };
+});
+
+const { buildInternalPdf, buildProposalPdf, buildWhatsAppSummary } = await import("../services/exportPdf");
+const { createBudget, DEFAULT_SETTINGS } = await import("../lib/defaults");
 
 function decode(bytes: Uint8Array): string {
   return new TextDecoder("latin1").decode(bytes);
+}
+
+function logoDataUrl(): string {
+  const file = join(process.cwd(), "src", "assets", "logo-simbolo.jpeg");
+  return `data:image/jpeg;base64,${readFileSync(file).toString("base64")}`;
 }
 
 function assertValidXref(text: string) {
@@ -64,5 +80,31 @@ describe("resumo para WhatsApp", () => {
     expect(summary).toContain("Alphatek Automação");
     expect(summary).toContain("Horas previstas");
     expect(summary).toContain("2.836,67");
+  });
+});
+
+describe("logo no PDF", () => {
+  const withLogo: BudgetSettings = { ...DEFAULT_SETTINGS, company: { ...DEFAULT_SETTINGS.company, logoDataUrl: logoDataUrl() } };
+
+  it("embeda o logo da empresa no cabeçalho da proposta", () => {
+    const text = decode(buildProposalPdf(sampleBudget(), withLogo));
+    expect(text).toContain("/Subtype /Image");
+    expect(text).toContain("/Filter /DCTDecode");
+    expect(text).toContain("/Width 1280 /Height 1280");
+    expect(text).toContain("/Im0 Do");
+    assertValidXref(text);
+  });
+
+  it("embeda o logo também na memória interna", () => {
+    const text = decode(buildInternalPdf(sampleBudget(), withLogo));
+    expect(text).toContain("/Filter /DCTDecode");
+    assertValidXref(text);
+  });
+
+  it("cai no logo embutido quando a empresa não tem logo configurado", () => {
+    const semLogo: BudgetSettings = { ...DEFAULT_SETTINGS, company: { ...DEFAULT_SETTINGS.company, logoDataUrl: "" } };
+    const text = decode(buildProposalPdf(sampleBudget(), semLogo));
+    expect(text).toContain("/Filter /DCTDecode");
+    assertValidXref(text);
   });
 });

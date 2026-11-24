@@ -100,9 +100,61 @@ function rgb(color: Rgb): string {
   return color.map((channel) => (channel / 255).toFixed(3)).join(" ");
 }
 
+function latin1(bytes: Uint8Array): string {
+  let output = "";
+  const chunk = 8192;
+  for (let index = 0; index < bytes.length; index += chunk) {
+    output += String.fromCharCode(...bytes.subarray(index, index + chunk));
+  }
+  return output;
+}
+
+export function jpegSize(bytes: Uint8Array): { width: number; height: number } | null {
+  if (bytes.length < 4 || bytes[0] !== 0xff || bytes[1] !== 0xd8) return null;
+  let offset = 2;
+  while (offset + 9 < bytes.length) {
+    if (bytes[offset] !== 0xff) {
+      offset += 1;
+      continue;
+    }
+    const marker = bytes[offset + 1];
+    if (marker === 0xd8 || marker === 0x01 || (marker >= 0xd0 && marker <= 0xd7)) {
+      offset += 2;
+      continue;
+    }
+    const length = (bytes[offset + 2] << 8) | bytes[offset + 3];
+    const isSof = marker >= 0xc0 && marker <= 0xcf && marker !== 0xc4 && marker !== 0xc8 && marker !== 0xcc;
+    if (isSof) {
+      const height = (bytes[offset + 5] << 8) | bytes[offset + 6];
+      const width = (bytes[offset + 7] << 8) | bytes[offset + 8];
+      if (width > 0 && height > 0) return { width, height };
+      return null;
+    }
+    offset += 2 + length;
+  }
+  return null;
+}
+
+export function dataUrlToBytes(dataUrl: string): Uint8Array | null {
+  const match = /^data:image\/jpeg;base64,(.+)$/i.exec(dataUrl.trim());
+  if (!match) return null;
+  try {
+    const binary = atob(match[1]);
+    const bytes = new Uint8Array(binary.length);
+    for (let index = 0; index < binary.length; index += 1) {
+      bytes[index] = binary.charCodeAt(index);
+    }
+    return bytes;
+  } catch {
+    return null;
+  }
+}
+
 export class PdfBuilder {
   private pages: string[][] = [[]];
   private current = this.pages[0];
+  private images: { data: Uint8Array; width: number; height: number }[] = [];
+  private pageImages: Set<number>[] = [new Set()];
 
   textWidth(text: string, size: number, bold = false): number {
     const units = toWinAnsi(text)
@@ -131,6 +183,7 @@ export class PdfBuilder {
   addPage(): void {
     this.pages.push([]);
     this.current = this.pages[this.pages.length - 1];
+    this.pageImages.push(new Set());
   }
 
   setPage(index: number): void {
@@ -185,35 +238,59 @@ export class PdfBuilder {
     );
   }
 
+  image(jpeg: Uint8Array, x: number, y: number, width: number, height: number): void {
+    const size = jpegSize(jpeg);
+    if (!size) return;
+    const index = this.images.length;
+    this.images.push({ data: jpeg, width: size.width, height: size.height });
+    this.pageImages[this.pages.length - 1].add(index);
+    const px = x * MM_TO_PT;
+    const py = PAGE_H - (y + height) * MM_TO_PT;
+    this.current.push(
+      `q ${(width * MM_TO_PT).toFixed(2)} 0 0 ${(height * MM_TO_PT).toFixed(2)} ${px.toFixed(2)} ${py.toFixed(
+        2,
+      )} cm /Im${index} Do Q`,
+    );
+  }
+
   build(): Uint8Array {
     const objects: string[] = [];
-    const pageObjectNumbers: number[] = [];
-    const firstPageObject = 5;
+    let next = 5;
 
-    this.pages.forEach((_ops, index) => {
-      pageObjectNumbers.push(firstPageObject + index * 2);
-    });
+    const imageNumbers = this.images.map(() => next++);
+    const pageNumbers = this.pages.map(() => next++);
+    const contentNumbers = this.pages.map(() => next++);
 
     objects[1] = "<< /Type /Catalog /Pages 2 0 R >>";
-    objects[2] = `<< /Type /Pages /Kids [${pageObjectNumbers.map((number) => `${number} 0 R`).join(" ")}] /Count ${
+    objects[2] = `<< /Type /Pages /Kids [${pageNumbers.map((number) => `${number} 0 R`).join(" ")}] /Count ${
       this.pages.length
     } >>`;
     objects[3] = "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>";
     objects[4] = "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>";
 
+    this.images.forEach((image, index) => {
+      const binary = latin1(image.data);
+      objects[imageNumbers[index]] =
+        `<< /Type /XObject /Subtype /Image /Width ${image.width} /Height ${image.height} ` +
+        `/ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${binary.length} >>\n` +
+        `stream\n${binary}\nendstream`;
+    });
+
     this.pages.forEach((ops, index) => {
-      const pageNumber = pageObjectNumbers[index];
-      const contentNumber = pageNumber + 1;
-      objects[pageNumber] =
+      const used = Array.from(this.pageImages[index])
+        .map((imageIndex) => `/Im${imageIndex} ${imageNumbers[imageIndex]} 0 R`)
+        .join(" ");
+      const xobject = used ? ` /XObject << ${used} >>` : "";
+      objects[pageNumbers[index]] =
         `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${PAGE_W.toFixed(2)} ${PAGE_H.toFixed(2)}] ` +
-        `/Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents ${contentNumber} 0 R >>`;
+        `/Resources << /Font << /F1 3 0 R /F2 4 0 R >>${xobject} >> /Contents ${contentNumbers[index]} 0 R >>`;
       const stream = ops.join("\n");
-      objects[contentNumber] = `<< /Length ${stream.length} >>\nstream\n${stream}\nendstream`;
+      objects[contentNumbers[index]] = `<< /Length ${stream.length} >>\nstream\n${stream}\nendstream`;
     });
 
     let file = "%PDF-1.4\n";
     const offsets: number[] = [];
-    for (let number = 1; number < objects.length; number += 1) {
+    for (let number = 1; number < next; number += 1) {
       const body = objects[number];
       if (!body) continue;
       offsets[number] = file.length;
@@ -221,7 +298,7 @@ export class PdfBuilder {
     }
 
     const xrefOffset = file.length;
-    const total = objects.length;
+    const total = next;
     file += `xref\n0 ${total}\n0000000000 65535 f \n`;
     for (let number = 1; number < total; number += 1) {
       file += `${String(offsets[number] ?? 0).padStart(10, "0")} 00000 n \n`;

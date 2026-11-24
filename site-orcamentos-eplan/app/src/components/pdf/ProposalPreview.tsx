@@ -6,6 +6,7 @@ import { formatCurrency, formatDate, formatHours, formatNumber } from "../../lib
 import { SERVICE_TYPE_LABELS } from "../../lib/defaults";
 import { Modal } from "../ui";
 import { exportInternalPdf, exportProposalPdf } from "../../services/exportPdf";
+import { BRAND_NAME, BRAND_SIMBOLO } from "../../assets/brand";
 
 export default function ProposalPreview({
   open,
@@ -83,12 +84,19 @@ export default function ProposalPreview({
 
       <div className="rounded-xl border border-slate-200 bg-white p-5 text-slate-800 dark:border-slate-700">
         <div className="flex flex-wrap items-start justify-between gap-3 border-b border-slate-200 pb-3">
-          <div>
-            <p className="text-lg font-bold text-brand-900">{settings.company.name || "OrçaEng"}</p>
-            <p className="text-xs text-slate-500">
-              {[settings.company.document, settings.company.phone, settings.company.email].filter(Boolean).join(" • ")}
-            </p>
-            {settings.company.address ? <p className="text-xs text-slate-500">{settings.company.address}</p> : null}
+          <div className="flex items-center gap-3">
+            <img
+              src={settings.company.logoDataUrl || BRAND_SIMBOLO}
+              alt={settings.company.name || BRAND_NAME}
+              className="h-12 w-12 rounded-lg object-contain ring-1 ring-slate-200"
+            />
+            <div>
+              <p className="text-lg font-bold text-brand-900">{settings.company.name || BRAND_NAME}</p>
+              <p className="text-xs text-slate-500">
+                {[settings.company.document, settings.company.phone, settings.company.email].filter(Boolean).join(" • ")}
+              </p>
+              {settings.company.address ? <p className="text-xs text-slate-500">{settings.company.address}</p> : null}
+            </div>
           </div>
           <div className="text-right">
             <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Proposta comercial</p>

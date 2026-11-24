@@ -2,8 +2,9 @@ import type { Budget, BudgetSettings } from "../types/budget";
 import { calculatePricing, itemHours, itemSubtotal } from "../lib/pricing";
 import { formatCurrency, formatDate, formatHours, formatNumber, sanitizeFileName } from "../lib/format";
 import { SERVICE_TYPE_LABELS } from "../lib/defaults";
-import { PdfBuilder, savePdfBytes } from "../lib/pdf";
+import { PdfBuilder, savePdfBytes, dataUrlToBytes } from "../lib/pdf";
 import type { Rgb } from "../lib/pdf";
+import { BRAND_NAME, BRAND_SIMBOLO } from "../assets/brand";
 
 export interface PdfOptions {
   showUnitValues: boolean;
@@ -123,12 +124,21 @@ class Layout {
 function header(layout: Layout, budget: Budget, settings: BudgetSettings, subtitle: string) {
   const { pdf } = layout;
   pdf.rect(0, 0, PAGE_WIDTH, 30, NAVY);
-  pdf.text(settings.company.name || "OrçaEng", MARGIN, 13, { size: 15, bold: true, color: [255, 255, 255] });
+
+  const logoBytes = dataUrlToBytes(settings.company.logoDataUrl || BRAND_SIMBOLO);
+  let textX = MARGIN;
+  if (logoBytes) {
+    pdf.rect(MARGIN, 6, 18, 18, [255, 255, 255]);
+    pdf.image(logoBytes, MARGIN + 1.5, 7.5, 15, 15);
+    textX = MARGIN + 22;
+  }
+
+  pdf.text(settings.company.name || BRAND_NAME, textX, 13, { size: 15, bold: true, color: [255, 255, 255] });
   const companyLine = [settings.company.document, settings.company.phone, settings.company.email]
     .filter(Boolean)
     .join("  •  ");
-  if (companyLine) pdf.text(companyLine, MARGIN, 19, { size: 8.5, color: [219, 234, 254] });
-  if (settings.company.address) pdf.text(settings.company.address, MARGIN, 24, { size: 8.5, color: [219, 234, 254] });
+  if (companyLine) pdf.text(companyLine, textX, 19, { size: 8.5, color: [219, 234, 254] });
+  if (settings.company.address) pdf.text(settings.company.address, textX, 24, { size: 8.5, color: [219, 234, 254] });
   pdf.text(subtitle.toUpperCase(), PAGE_WIDTH - MARGIN, 13, { size: 9, bold: true, color: [255, 255, 255], align: "right" });
   pdf.text(`${budget.number}  •  ${formatDate(budget.createdAt)}`, PAGE_WIDTH - MARGIN, 19, {
     size: 8.5,
@@ -269,7 +279,7 @@ export function buildProposalPdf(
     color: MUTED,
   });
 
-  return layout.finish(settings.defaults.footer || settings.company.name || "OrçaEng");
+  return layout.finish(settings.defaults.footer || settings.company.name || BRAND_NAME);
 }
 
 export function exportProposalPdf(
@@ -365,7 +375,7 @@ export function buildInternalPdf(budget: Budget, settings: BudgetSettings): Uint
     MUTED,
   );
 
-  return layout.finish(settings.defaults.footer || settings.company.name || "OrçaEng");
+  return layout.finish(settings.defaults.footer || settings.company.name || BRAND_NAME);
 }
 
 export function exportInternalPdf(budget: Budget, settings: BudgetSettings): void {
@@ -375,7 +385,7 @@ export function exportInternalPdf(budget: Budget, settings: BudgetSettings): voi
 export function buildWhatsAppSummary(budget: Budget, settings: BudgetSettings): string {
   const result = calculatePricing(budget);
   const lines = [
-    `*${settings.company.name || "OrçaEng"}* — Proposta ${budget.number}`,
+    `*${settings.company.name || BRAND_NAME}* — Proposta ${budget.number}`,
     `Cliente: ${budget.customer.name || "—"}`,
     `Projeto: ${budget.projectName || "—"}${budget.projectCode ? ` (${budget.projectCode})` : ""}`,
     budget.scope ? `Escopo: ${budget.scope.slice(0, 240)}${budget.scope.length > 240 ? "…" : ""}` : "",
