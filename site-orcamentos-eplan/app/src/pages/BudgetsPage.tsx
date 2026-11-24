@@ -148,7 +148,84 @@ export default function BudgetsPage() {
             }
           />
         ) : (
-          <div className="overflow-x-auto">
+          <>
+            <div className="divide-y divide-slate-100 sm:hidden dark:divide-slate-800/60">
+              {filtered.map((budget) => {
+                const result = calculatePricing(budget);
+                return (
+                  <div key={budget.id} className="px-4 py-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <Link
+                          to={`/orcamentos/${budget.id}`}
+                          className="text-sm font-semibold text-slate-900 hover:underline dark:text-slate-100"
+                        >
+                          {budget.number}
+                        </Link>
+                        <p className="truncate text-sm text-slate-700 dark:text-slate-300">
+                          {budget.customer.name || "Sem cliente"}
+                        </p>
+                        <p className="truncate text-xs text-slate-500 dark:text-slate-400">
+                          {budget.projectName || "Sem projeto"} • {SERVICE_TYPE_LABELS[budget.serviceType]}
+                        </p>
+                      </div>
+                      <StatusBadge status={budget.status} />
+                    </div>
+                    <div className="mt-2 flex items-center justify-between gap-2">
+                      <div>
+                        <p className="text-base font-bold text-slate-900 dark:text-slate-100">
+                          {formatCurrency(result.precoFinal)}
+                        </p>
+                        <p className="text-xs text-slate-500 dark:text-slate-400">
+                          {formatHours(result.hours.total)} • {formatDate(budget.updatedAt)}
+                        </p>
+                      </div>
+                      <div className="flex gap-1">
+                        <button
+                          type="button"
+                          className="btn-ghost p-1.5"
+                          title="Duplicar"
+                          onClick={() => {
+                            const copy = duplicate(budget.id);
+                            if (copy) navigate(`/orcamentos/${copy.id}`);
+                          }}
+                        >
+                          <Copy size={16} />
+                        </button>
+                        <button
+                          type="button"
+                          className="btn-ghost p-1.5"
+                          title="Exportar PDF"
+                          onClick={() => exportProposalPdf(budget, settings)}
+                        >
+                          <FileDown size={16} />
+                        </button>
+                        <button
+                          type="button"
+                          className="btn-ghost p-1.5"
+                          title="Exportar JSON"
+                          onClick={() => exportBudgetJson(budget)}
+                        >
+                          <Download size={16} />
+                        </button>
+                        <button
+                          type="button"
+                          className="btn-ghost p-1.5 text-red-600"
+                          title="Excluir"
+                          onClick={() => {
+                            if (window.confirm(`Excluir o orçamento ${budget.number}?`)) removeBudget(budget.id);
+                          }}
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="hidden overflow-x-auto sm:block">
             <table className="min-w-full">
               <thead>
                 <tr className="border-y border-slate-200 dark:border-slate-800">
@@ -232,7 +309,8 @@ export default function BudgetsPage() {
                 })}
               </tbody>
             </table>
-          </div>
+            </div>
+          </>
         )}
       </Card>
 

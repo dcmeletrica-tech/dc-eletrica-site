@@ -87,8 +87,91 @@ export default function DetailedItems({
           Nenhuma atividade detalhada. Adicione linhas ou converta a estimativa rápida.
         </p>
       ) : (
-        <div className="overflow-x-auto">
-          <table className={`min-w-[900px] ${active ? "" : "opacity-60"}`}>
+        <>
+          <div className={`space-y-3 md:hidden ${active ? "" : "opacity-60"}`}>
+            {items.map((item) => (
+              <div key={item.id} className="rounded-xl border border-slate-200 p-3 dark:border-slate-800">
+                <div className="flex items-start justify-between gap-2">
+                  <select
+                    className="input text-xs"
+                    value={item.category}
+                    onChange={(event) => update(item.id, { category: event.target.value })}
+                    aria-label="Categoria"
+                  >
+                    {categories.map((category) => (
+                      <option key={category} value={category}>
+                        {category}
+                      </option>
+                    ))}
+                  </select>
+                  <div className="flex shrink-0 gap-1">
+                    <button type="button" className="btn-ghost p-1.5" title="Duplicar linha" onClick={() => duplicate(item)}>
+                      <Copy size={15} />
+                    </button>
+                    <button
+                      type="button"
+                      className="btn-ghost p-1.5 text-red-600"
+                      title="Remover linha"
+                      onClick={() => remove(item.id)}
+                    >
+                      <Trash2 size={15} />
+                    </button>
+                  </div>
+                </div>
+                <input
+                  className="input mt-2"
+                  value={item.description}
+                  placeholder="Descrição da atividade"
+                  onChange={(event) => update(item.id, { description: event.target.value })}
+                  aria-label="Descrição"
+                />
+                <div className="mt-2 grid grid-cols-2 gap-2">
+                  <div>
+                    <p className="label">Qtd</p>
+                    <NumberInput value={item.quantity} onChange={(value) => update(item.id, { quantity: value })} step={1} ariaLabel="Quantidade" />
+                  </div>
+                  <div>
+                    <p className="label">Unidade</p>
+                    <select
+                      className="input"
+                      value={item.unit}
+                      onChange={(event) => update(item.id, { unit: event.target.value as BudgetItem["unit"] })}
+                      aria-label="Unidade de tempo"
+                    >
+                      <option value="min">min</option>
+                      <option value="h">h</option>
+                    </select>
+                  </div>
+                  <div>
+                    <p className="label">Tempo</p>
+                    <NumberInput
+                      value={item.timePerUnit}
+                      onChange={(value) => update(item.id, { timePerUnit: value })}
+                      step={0.25}
+                      ariaLabel="Tempo por unidade"
+                    />
+                  </div>
+                  <div>
+                    <p className="label">R$/h</p>
+                    <NumberInput
+                      value={item.hourlyRate}
+                      onChange={(value) => update(item.id, { hourlyRate: value })}
+                      step={5}
+                      ariaLabel="Valor por hora"
+                    />
+                  </div>
+                </div>
+                <div className="mt-2 flex items-center justify-between rounded-lg bg-slate-50 px-2.5 py-1.5 text-xs dark:bg-slate-950">
+                  <span className="text-slate-500 dark:text-slate-400">{formatNumber(itemHours(item), 2)} h</span>
+                  <span className="font-semibold text-slate-900 dark:text-slate-100">{formatCurrency(itemSubtotal(item))}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className={`hidden md:block ${active ? "" : "opacity-60"}`}>
+            <div className="overflow-x-auto">
+              <table className="min-w-[900px]">
             <thead>
               <tr className="border-b border-slate-200 dark:border-slate-800">
                 <th className="table-head">Categoria</th>
@@ -186,7 +269,9 @@ export default function DetailedItems({
               ))}
             </tbody>
           </table>
-        </div>
+            </div>
+          </div>
+        </>
       )}
     </div>
   );

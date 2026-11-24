@@ -57,8 +57,8 @@ export default function DashboardPage() {
         />
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-[1.6fr_1fr]">
-        <Card>
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1.6fr_1fr]">
+        <Card className="min-w-0">
           <SectionHeader
             title="Orçamentos recentes"
             description="Últimos registros atualizados"
@@ -79,7 +79,65 @@ export default function DashboardPage() {
               }
             />
           ) : (
-            <div className="overflow-x-auto">
+            <>
+              <div className="divide-y divide-slate-100 sm:hidden dark:divide-slate-800/60">
+                {recent.map((budget) => (
+                  <div key={budget.id} className="px-4 py-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">{budget.number}</p>
+                        <p className="truncate text-sm text-slate-700 dark:text-slate-300">
+                          {budget.customer.name || "Sem cliente"}
+                        </p>
+                        <p className="truncate text-xs text-slate-500 dark:text-slate-400">
+                          {budget.projectName || "Sem projeto"} • {formatDate(budget.createdAt)}
+                        </p>
+                      </div>
+                      <StatusBadge status={budget.status} />
+                    </div>
+                    <div className="mt-2 flex items-center justify-between gap-2">
+                      <p className="text-base font-bold text-slate-900 dark:text-slate-100">
+                        {formatCurrency(priceOf(budget))}
+                      </p>
+                      <div className="flex gap-1">
+                        <button
+                          type="button"
+                          className="btn-ghost p-1.5"
+                          title="Duplicar"
+                          onClick={() => {
+                            const copy = duplicate(budget.id);
+                            if (copy) navigate(`/orcamentos/${copy.id}`);
+                          }}
+                        >
+                          <Copy size={16} />
+                        </button>
+                        <button
+                          type="button"
+                          className="btn-ghost p-1.5"
+                          title="Exportar PDF"
+                          onClick={() => exportProposalPdf(budget, settings)}
+                        >
+                          <FileDown size={16} />
+                        </button>
+                        <button
+                          type="button"
+                          className="btn-ghost p-1.5 text-red-600"
+                          title="Excluir"
+                          onClick={() => {
+                            if (window.confirm(`Excluir o orçamento ${budget.number}? Esta ação não pode ser desfeita.`)) {
+                              removeBudget(budget.id);
+                            }
+                          }}
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="hidden overflow-x-auto sm:block">
               <table className="min-w-full">
                 <thead>
                   <tr className="border-b border-slate-200 dark:border-slate-800">
@@ -145,11 +203,12 @@ export default function DashboardPage() {
                   ))}
                 </tbody>
               </table>
-            </div>
+              </div>
+            </>
           )}
         </Card>
 
-        <Card>
+        <Card className="min-w-0">
           <SectionHeader title="Por situação" description="Distribuição dos orçamentos" />
           <div className="space-y-3 px-4 py-4 sm:px-5">
             {stats.byStatus.map((entry) => {
